@@ -57,7 +57,7 @@ function SebastianApp() {
     // Main Menu Component
     const MainMenu = () => (
         <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Sebastian's Silly App</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">✨ Sebastian's Fun App! ✨</h1>
             <p className="text-gray-600 text-center mb-6">Choose what you want to do!</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -113,6 +113,15 @@ function SebastianApp() {
                     <div className="text-4xl mb-2">🎮</div>
                     <div className="text-xl">Emoji Pop Game</div>
                     <div className="text-sm opacity-75">Pop the emojis before they disappear!</div>
+                </button>
+                
+                <button
+                    onClick={() => goToPage('journal')}
+                    className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-6 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
+                >
+                    <div className="text-4xl mb-2">📔</div>
+                    <div className="text-xl">Daily Journal</div>
+                    <div className="text-sm opacity-75">Write your thoughts and memories!</div>
                 </button>
                 
                 <button
@@ -205,6 +214,13 @@ function SebastianApp() {
                     <div>
                         <BackButton title="Emoji Pop" />
                         <GameTab />
+                    </div>
+                )}
+                
+                {currentPage === 'journal' && (
+                    <div>
+                        <BackButton title="Journal" />
+                        <JournalTab />
                     </div>
                 )}
                 
