@@ -60,7 +60,7 @@ function SebastianApp() {
             <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Sebastian's Silly App</h1>
             <p className="text-gray-600 text-center mb-6">Choose what you want to do!</p>
             
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button
                     onClick={() => goToPage('buttons')}
                     className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-6 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
@@ -138,7 +138,7 @@ function SebastianApp() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-purple-200 p-4">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md md:max-w-2xl lg:max-w-4xl">
                 {currentPage === 'menu' && <MainMenu />}
                 
                 {currentPage === 'buttons' && (
