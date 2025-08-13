@@ -480,7 +480,7 @@ const WeatherTab = () => {
             </div>
 
             {/* Weather Details */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
                 <div className="bg-blue-100 rounded-lg p-3 text-center">
                     <div className="text-2xl mb-1">🌡️</div>
                     <div className="text-sm font-semibold text-gray-700">Feels Like</div>
@@ -493,22 +493,23 @@ const WeatherTab = () => {
                     <div className="text-lg font-bold text-green-600">{Math.round(weather.wind.speed)} m/s</div>
                 </div>
                 
-                {weather.visibility && (
-                    <div className="bg-purple-100 rounded-lg p-3 text-center">
-                        <div className="text-2xl mb-1">👀</div>
-                        <div className="text-sm font-semibold text-gray-700">Visibility</div>
-                        <div className="text-lg font-bold text-purple-600">{weather.visibility} km</div>
-                    </div>
-                )}
-                
-                {weather.uv && (
-                    <div className="bg-yellow-100 rounded-lg p-3 text-center">
+                <div className="bg-purple-100 rounded-lg p-3 text-center">
+                    <div className="text-2xl mb-1">👀</div>
+                    <div className="text-sm font-semibold text-gray-700">Visibility</div>
+                    <div className="text-lg font-bold text-purple-600">{weather.visibility} km</div>
+                </div>
+            </div>
+
+            {/* UV Index (if available) - separate row */}
+            {weather.uv && (
+                <div className="flex justify-center">
+                    <div className="bg-yellow-100 rounded-lg p-3 text-center w-48">
                         <div className="text-2xl mb-1">☀️</div>
                         <div className="text-sm font-semibold text-gray-700">UV Index</div>
                         <div className="text-lg font-bold text-yellow-600">{weather.uv}</div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Activity Suggestions */}
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
