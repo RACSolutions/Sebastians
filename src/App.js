@@ -57,7 +57,7 @@ function SebastianApp() {
     // Main Menu Component
     const MainMenu = () => (
         <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Sebastian's Silly App</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Sebastian's Fun App! 🥰</h1>
             <p className="text-gray-600 text-center mb-6">Choose what you want to do!</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
