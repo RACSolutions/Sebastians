@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barnabus Button App</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState } = React;
+
+        function BarnabusApp() {
+            const [message, setMessage] = useState('');
+            const [customText, setCustomText] = useState('Barnabus');
+            const [isPlaying, setIsPlaying] = useState(false);
+
+            const handleSpeak = () => {
+                setMessage(customText);
+                
+                // Text-to-speech functionality
+                if ('speechSynthesis' in window) {
+                    setIsPlaying(true);
+                    const utterance = new SpeechSynthesisUtterance(customText);
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1.2;
+                    utterance.volume = 0.8;
+                    
+                    utterance.onend = () => {
+                        setIsPlaying(false);
+                    };
+                    
+                    window.speechSynthesis.speak(utterance);
+                }
+            };
+
+            const stopSpeech = () => {
+                window.speechSynthesis.cancel();
+                setIsPlaying(false);
+            };
+
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-8">
+                    <div className="bg-white rounded-lg shadow-lg p-8 text-center max-w-md w-full">
+                        <h1 className="text-3xl font-bold text-gray-800 mb-8">Text-to-Speech Button</h1>
+                        
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    What should I say?
+                                </label>
+                                <input
+                                    type="text"
+                                    value={customText}
+                                    onChange={(e) => setCustomText(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Enter text to speak..."
+                                />
+                            </div>
+                            
+                            <div className="space-y-3">
+                                {!isPlaying ? (
+                                    <button 
+                                        onClick={handleSpeak}
+                                        disabled={!customText.trim()}
+                                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full"
+                                    >
+                                        🔊 Speak: "{customText}"
+                                    </button>
+                                ) : (
+                                    <button 
+                                        onClick={stopSpeech}
+                                        className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full animate-pulse"
+                                    >
+                                        ⏹️ Stop Speaking
+                                    </button>
+                                )}
+                            </div>
+                            
+                            <div className="flex gap-2 flex-wrap justify-center">
+                                {['Barnabus', 'Hello World', 'Claude is awesome', 'Good morning!'].map((preset) => (
+                                    <button
+                                        key={preset}
+                                        onClick={() => setCustomText(preset)}
+                                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm transition-colors duration-200"
+                                    >
+                                        {preset}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        {message && (
+                            <div className="mt-6 text-2xl font-semibold text-purple-600 animate-bounce">
+                                "{message}"
+                            </div>
+                        )}
+                        
+                        <div className="mt-6 text-xs text-gray-500">
+                            Uses your browser's built-in text-to-speech
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<BarnabusApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
