@@ -500,16 +500,7 @@ const WeatherTab = () => {
                 </div>
             </div>
 
-            {/* UV Index (if available) - separate row */}
-            {weather.uv && (
-                <div className="flex justify-center">
-                    <div className="bg-yellow-100 rounded-lg p-3 text-center w-48">
-                        <div className="text-2xl mb-1">☀️</div>
-                        <div className="text-sm font-semibold text-gray-700">UV Index</div>
-                        <div className="text-lg font-bold text-yellow-600">{weather.uv}</div>
-                    </div>
-                </div>
-            )}
+           
 
             {/* Activity Suggestions */}
             <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
