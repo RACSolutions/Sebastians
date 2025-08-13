@@ -89,6 +89,15 @@ function SebastianApp() {
                 </button>
                 
                 <button
+                    onClick={() => goToPage('story')}
+                    className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-6 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
+                >
+                    <div className="text-4xl mb-2">📚</div>
+                    <div className="text-xl">Story Generator</div>
+                    <div className="text-sm opacity-75">Create silly Mad Libs stories!</div>
+                </button>
+                
+                <button
                     onClick={() => goToPage('game')}
                     className="bg-red-500 hover:bg-red-600 text-white font-bold py-6 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
                 >
@@ -157,6 +166,13 @@ function SebastianApp() {
                     <div>
                         <BackButton title="Piano" />
                         <PianoTab />
+                    </div>
+                )}
+                
+                {currentPage === 'story' && (
+                    <div>
+                        <BackButton title="Stories" />
+                        <StoryTab />
                     </div>
                 )}
                 

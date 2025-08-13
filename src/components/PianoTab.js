@@ -32,10 +32,44 @@ const PianoTab = () => {
         { note: 'A#', position: 5.5 }
     ];
 
-    // Create different instrument sounds
+    // Shared audio context for better performance
+    const audioContextRef = React.useRef(null);
+    const activeNotesRef = React.useRef(new Map());
+
+    // Initialize audio context once
+    React.useEffect(() => {
+        try {
+            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Resume context on user interaction (required by some browsers)
+            const resumeContext = () => {
+                if (audioContextRef.current?.state === 'suspended') {
+                    audioContextRef.current.resume();
+                }
+            };
+            
+            document.addEventListener('touchstart', resumeContext, { once: true });
+            document.addEventListener('click', resumeContext, { once: true });
+            
+            return () => {
+                document.removeEventListener('touchstart', resumeContext);
+                document.removeEventListener('click', resumeContext);
+            };
+        } catch (error) {
+            console.log('Audio context not supported:', error);
+        }
+    }, []);
+
+    // Create different instrument sounds with shared context
     const createSound = (frequency, instrument, duration = 0.5) => {
         try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioContext = audioContextRef.current;
+            if (!audioContext) return null;
+            
+            // Resume context if suspended
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
             
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
@@ -58,9 +92,9 @@ const PianoTab = () => {
                     
                     // Piano-like envelope: quick attack, gradual decay
                     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05);
-                    gainNode.gain.exponentialRampToValueAtTime(0.1, audioContext.currentTime + 0.3);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                    gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.02);
+                    gainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 0.2);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
                     break;
                     
                 case 'organ':
@@ -70,9 +104,9 @@ const PianoTab = () => {
                     
                     // Organ-like: sustained sound
                     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1);
-                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime + duration - 0.1);
-                    gainNode.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                    gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
+                    gainNode.gain.setValueAtTime(0.15, audioContext.currentTime + duration - 0.1);
+                    gainNode.gain.linearRampToValueAtTime(0.001, audioContext.currentTime + duration);
                     break;
                     
                 case 'bell':
@@ -82,8 +116,8 @@ const PianoTab = () => {
                     
                     // Bell-like: sharp attack, long decay
                     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.01);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                    gainNode.gain.linearRampToValueAtTime(0.25, audioContext.currentTime + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
                     break;
                     
                 case 'funny':
@@ -91,22 +125,23 @@ const PianoTab = () => {
                     filter.type = 'bandpass';
                     filter.frequency.setValueAtTime(800, audioContext.currentTime);
                     
-                    // Funny sound with vibrato
-                    const lfo = audioContext.createOscillator();
-                    const lfoGain = audioContext.createGain();
-                    lfo.frequency.setValueAtTime(6, audioContext.currentTime);
-                    lfoGain.gain.setValueAtTime(10, audioContext.currentTime);
-                    lfo.connect(lfoGain);
-                    lfoGain.connect(oscillator.frequency);
-                    
+                    // Funny sound with vibrato - simplified to avoid complexity
                     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05);
-                    gainNode.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + duration);
-                    
-                    lfo.start(audioContext.currentTime);
-                    lfo.stop(audioContext.currentTime + duration);
+                    gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.03);
+                    gainNode.gain.linearRampToValueAtTime(0.001, audioContext.currentTime + duration);
                     break;
             }
+            
+            // Clean up after playing
+            oscillator.addEventListener('ended', () => {
+                try {
+                    oscillator.disconnect();
+                    gainNode.disconnect();
+                    filter.disconnect();
+                } catch (e) {
+                    // Already disconnected
+                }
+            });
             
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + duration);
@@ -119,15 +154,28 @@ const PianoTab = () => {
     };
 
     const playNote = (note) => {
+        // Prevent multiple rapid clicks on the same note
+        if (activeNotesRef.current.has(note)) {
+            return;
+        }
+        
         const frequency = noteFrequencies[note][currentOctave - 1];
-        if (frequency) {
-            const sound = createSound(frequency, selectedInstrument);
+        if (frequency && audioContextRef.current) {
+            // Mark note as active
+            activeNotesRef.current.set(note, true);
+            
+            const sound = createSound(frequency, selectedInstrument, 0.8);
             setIsPlaying(prev => ({ ...prev, [note]: true }));
             
             // Visual feedback duration
             setTimeout(() => {
                 setIsPlaying(prev => ({ ...prev, [note]: false }));
-            }, 200);
+            }, 150);
+            
+            // Clear active note after a short delay
+            setTimeout(() => {
+                activeNotesRef.current.delete(note);
+            }, 100);
         }
     };
 
