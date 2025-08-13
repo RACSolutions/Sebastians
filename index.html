@@ -85,33 +85,43 @@
                 }
             }, []);
 
-            const startDrawing = (e) => {
-                setIsDrawing(true);
+            const getEventPos = (e) => {
                 const canvas = canvasRef.current;
                 const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
                 
-                const ctx = canvas.getContext('2d');
+                // Handle both mouse and touch events
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            };
+
+            const startDrawing = (e) => {
+                e.preventDefault(); // Prevent scrolling on mobile
+                setIsDrawing(true);
+                const pos = getEventPos(e);
+                
+                const ctx = canvasRef.current.getContext('2d');
                 ctx.beginPath();
-                ctx.moveTo(x, y);
+                ctx.moveTo(pos.x, pos.y);
             };
 
             const draw = (e) => {
                 if (!isDrawing) return;
+                e.preventDefault(); // Prevent scrolling on mobile
                 
-                const canvas = canvasRef.current;
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                const ctx = canvas.getContext('2d');
+                const pos = getEventPos(e);
+                const ctx = canvasRef.current.getContext('2d');
                 ctx.strokeStyle = currentColor;
-                ctx.lineTo(x, y);
+                ctx.lineTo(pos.x, pos.y);
                 ctx.stroke();
             };
 
-            const stopDrawing = () => {
+            const stopDrawing = (e) => {
+                if (e) e.preventDefault();
                 setIsDrawing(false);
             };
 
@@ -140,11 +150,18 @@
                         ref={canvasRef}
                         width={300}
                         height={200}
-                        className="border-2 border-gray-300 rounded-lg mx-auto block bg-white cursor-crosshair"
+                        className="border-2 border-gray-300 rounded-lg mx-auto block bg-white cursor-crosshair touch-none"
+                        style={{ touchAction: 'none' }}
+                        // Mouse events
                         onMouseDown={startDrawing}
                         onMouseMove={draw}
                         onMouseUp={stopDrawing}
                         onMouseLeave={stopDrawing}
+                        // Touch events for mobile
+                        onTouchStart={startDrawing}
+                        onTouchMove={draw}
+                        onTouchEnd={stopDrawing}
+                        onTouchCancel={stopDrawing}
                     />
                     
                     <button
@@ -698,7 +715,8 @@
             );
         }
 
-        ReactDOM.render(<SebastianApp />, document.getElementById('root'));
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SebastianApp />);
     </script>
 </body>
 </html>
