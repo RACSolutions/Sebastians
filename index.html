@@ -77,7 +77,7 @@
                 
                 // Add event listeners for debugging
                 audio.addEventListener('loadstart', () => {
-                    console.log('📄 Audio loading started...');
+                    console.log('🔄 Audio loading started...');
                 });
                 
                 audio.addEventListener('canplay', () => {
@@ -121,7 +121,7 @@
                 
                 // Add event listeners for debugging
                 audio.addEventListener('loadstart', () => {
-                    console.log('📄 Chomp audio loading started...');
+                    console.log('🔄 Chomp audio loading started...');
                 });
                 
                 audio.addEventListener('canplay', () => {
@@ -161,7 +161,7 @@
                 
                 // Add event listeners for debugging
                 audio.addEventListener('loadstart', () => {
-                    console.log('📄 Sniff audio loading started...');
+                    console.log('🔄 Sniff audio loading started...');
                 });
                 
                 audio.addEventListener('canplay', () => {
@@ -243,7 +243,7 @@
         window.playSniffSound = playSniffSound;
     </script>
     
-    <!-- Load components in order -->
+    <!-- Load existing components -->
     <script type="text/babel" src="src/components/ButtonsTab.js"></script>
     <script type="text/babel" src="src/components/DrawTab.js"></script>
     <script type="text/babel" src="src/components/PianoTab.js"></script>
@@ -253,6 +253,15 @@
     <script type="text/babel" src="src/components/WeatherTab.js"></script>
     <script type="text/babel" src="src/components/GameTab.js"></script>
     <script type="text/babel" src="src/components/PuppyTab.js"></script>
+    
+    <!-- Load new game components -->
+    <script type="text/babel" src="src/components/SnakeGame.js"></script>
+    <script type="text/babel" src="src/components/TicTacToe.js"></script>
+    <script type="text/babel" src="src/components/SimonSays.js"></script>
+    <script type="text/babel" src="src/components/FunQuiz.js"></script>
+    <script type="text/babel" src="src/components/RiddlesTab.js"></script>
+    
+    <!-- Load main app last -->
     <script type="text/babel" src="src/App.js"></script>
 </body>
 </html>
