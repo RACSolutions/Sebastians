@@ -15,11 +15,586 @@
     <script type="text/babel">
         const { useState } = React;
 
+        // Move components outside to prevent re-rendering issues
+        const ButtonsTab = ({ customText, setCustomText, handleSpeak, stopSpeech, isPlaying, message }) => (
+            <div className="space-y-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        What should I say?
+                    </label>
+                    <input
+                        type="text"
+                        value={customText}
+                        onChange={(e) => setCustomText(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter text to speak..."
+                    />
+                </div>
+                
+                <div className="space-y-3">
+                    {!isPlaying ? (
+                        <button 
+                            onClick={handleSpeak}
+                            disabled={!customText.trim()}
+                            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full"
+                        >
+                            🔊 Speak: "{customText}"
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={stopSpeech}
+                            className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full animate-pulse"
+                        >
+                            ⏹️ Stop Speaking
+                        </button>
+                    )}
+                </div>
+                
+                <div className="flex gap-2 flex-wrap justify-center">
+                    {['Barnabus', 'Poo Poo Pee Pee', 'Eat Beans With Me', 'Reeee'].map((preset) => (
+                        <button
+                            key={preset}
+                            onClick={() => setCustomText(preset)}
+                            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm transition-colors duration-200"
+                        >
+                            {preset}
+                        </button>
+                    ))}
+                </div>
+                
+                {message && (
+                    <div className="mt-6 text-2xl font-semibold text-purple-600 animate-bounce">
+                        "{message}"
+                    </div>
+                )}
+            </div>
+        );
+
+        const DrawTab = () => {
+            const canvasRef = React.useRef(null);
+            const [isDrawing, setIsDrawing] = React.useState(false);
+            const [currentColor, setCurrentColor] = React.useState('#000000');
+
+            React.useEffect(() => {
+                const canvas = canvasRef.current;
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.lineWidth = 3;
+                }
+            }, []);
+
+            const startDrawing = (e) => {
+                setIsDrawing(true);
+                const canvas = canvasRef.current;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            };
+
+            const draw = (e) => {
+                if (!isDrawing) return;
+                
+                const canvas = canvasRef.current;
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.strokeStyle = currentColor;
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            };
+
+            const stopDrawing = () => {
+                setIsDrawing(false);
+            };
+
+            const clearCanvas = () => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            };
+
+            return (
+                <div className="space-y-4">
+                    <h3 className="text-xl font-bold text-gray-800 text-center">Draw Something!</h3>
+                    
+                    <div className="flex justify-center gap-2 mb-4">
+                        {['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500'].map(color => (
+                            <button
+                                key={color}
+                                onClick={() => setCurrentColor(color)}
+                                className={`w-8 h-8 rounded-full border-2 ${currentColor === color ? 'border-black' : 'border-gray-300'}`}
+                                style={{ backgroundColor: color }}
+                            />
+                        ))}
+                    </div>
+                    
+                    <canvas
+                        ref={canvasRef}
+                        width={300}
+                        height={200}
+                        className="border-2 border-gray-300 rounded-lg mx-auto block bg-white cursor-crosshair"
+                        onMouseDown={startDrawing}
+                        onMouseMove={draw}
+                        onMouseUp={stopDrawing}
+                        onMouseLeave={stopDrawing}
+                    />
+                    
+                    <button
+                        onClick={clearCanvas}
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full"
+                    >
+                        🗑️ Clear Drawing
+                    </button>
+                </div>
+            );
+        };
+
+        const GameTab = () => {
+            const [score, setScore] = React.useState(0);
+            const [timeLeft, setTimeLeft] = React.useState(30);
+            const [gameActive, setGameActive] = React.useState(false);
+            const [emojiPosition, setEmojiPosition] = React.useState({ x: 50, y: 50 });
+            const [currentEmoji, setCurrentEmoji] = React.useState('🎈');
+            const [popEffect, setPopEffect] = React.useState({ show: false, x: 0, y: 0 });
+            const [emojiVisible, setEmojiVisible] = React.useState(true);
+            const [highScore, setHighScore] = React.useState(() => {
+                const saved = localStorage.getItem('sebastianHighScore');
+                return saved ? parseInt(saved) : 0;
+            });
+
+            const emojis = ['🎈', '🎉', '⭐', '🍎', '🍌', '🐸', '🌈', '⚽', '🎯', '🎊'];
+
+            const getEmojiDisplayTime = (currentScore) => {
+                const baseTime = 3000;
+                const minTime = 800;
+                const reduction = Math.floor(currentScore / 3) * 200;
+                return Math.max(minTime, baseTime - reduction);
+            };
+
+            const playPopSound = () => {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+                    
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                } catch (error) {
+                    console.log('Audio not supported, playing without sound');
+                }
+            };
+
+            const gameTimerRef = React.useRef(null);
+            const emojiTimerRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (gameActive) {
+                    gameTimerRef.current = setInterval(() => {
+                        setTimeLeft(prevTime => {
+                            if (prevTime <= 1) {
+                                setGameActive(false);
+                                return 0;
+                            }
+                            return prevTime - 1;
+                        });
+                    }, 1000);
+                }
+
+                return () => {
+                    if (gameTimerRef.current) {
+                        clearInterval(gameTimerRef.current);
+                    }
+                };
+            }, [gameActive]);
+
+            React.useEffect(() => {
+                if (!gameActive && timeLeft === 0) {
+                    if (score > highScore) {
+                        setHighScore(score);
+                        localStorage.setItem('sebastianHighScore', score.toString());
+                    }
+                    if (emojiTimerRef.current) {
+                        clearTimeout(emojiTimerRef.current);
+                    }
+                }
+            }, [gameActive, timeLeft, score, highScore]);
+
+            const startGame = () => {
+                if (gameTimerRef.current) {
+                    clearInterval(gameTimerRef.current);
+                }
+                if (emojiTimerRef.current) {
+                    clearTimeout(emojiTimerRef.current);
+                }
+
+                setScore(0);
+                setTimeLeft(30);
+                setGameActive(true);
+                setEmojiVisible(true);
+                moveEmoji();
+            };
+
+            const moveEmoji = () => {
+                if (!gameActive) return;
+
+                setEmojiPosition({
+                    x: Math.random() * 70 + 15,
+                    y: Math.random() * 60 + 20
+                });
+                setCurrentEmoji(emojis[Math.floor(Math.random() * emojis.length)]);
+                setEmojiVisible(true);
+
+                const displayTime = getEmojiDisplayTime(score);
+                emojiTimerRef.current = setTimeout(() => {
+                    setEmojiVisible(false);
+                    setTimeout(() => {
+                        if (gameActive) moveEmoji();
+                    }, 500);
+                }, displayTime);
+            };
+
+            const popEmoji = (e) => {
+                if (gameActive && emojiVisible) {
+                    playPopSound();
+                    
+                    const rect = e.currentTarget.parentElement.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    setPopEffect({ show: true, x, y });
+                    setTimeout(() => setPopEffect({ show: false, x: 0, y: 0 }), 600);
+                    
+                    setScore(prevScore => prevScore + 1);
+                    
+                    if (emojiTimerRef.current) {
+                        clearTimeout(emojiTimerRef.current);
+                    }
+                    setTimeout(() => {
+                        if (gameActive) moveEmoji();
+                    }, 100);
+                }
+            };
+
+            React.useEffect(() => {
+                return () => {
+                    if (gameTimerRef.current) {
+                        clearInterval(gameTimerRef.current);
+                    }
+                    if (emojiTimerRef.current) {
+                        clearTimeout(emojiTimerRef.current);
+                    }
+                };
+            }, []);
+
+            const difficultyLevel = Math.floor(score / 3) + 1;
+            const currentDisplayTime = getEmojiDisplayTime(score);
+
+            return (
+                <div className="space-y-4">
+                    <h3 className="text-xl font-bold text-gray-800 text-center">Emoji Pop!</h3>
+                    
+                    <div className="flex justify-between text-lg font-semibold">
+                        <span>Score: {score}</span>
+                        <span className={timeLeft <= 5 ? 'text-red-500 animate-pulse' : ''}>
+                            Time: {timeLeft}s
+                        </span>
+                    </div>
+                    
+                    <div className="text-center space-y-1">
+                        <div className="text-sm font-semibold text-purple-600">
+                            🏆 High Score: {highScore}
+                        </div>
+                        {gameActive && (
+                            <div className="text-xs text-gray-600">
+                                Level {difficultyLevel} • {(currentDisplayTime/1000).toFixed(1)}s display time
+                            </div>
+                        )}
+                    </div>
+                    
+                    {!gameActive ? (
+                        <div className="space-y-3">
+                            <button
+                                onClick={startGame}
+                                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full"
+                            >
+                                🎮 Start Game
+                            </button>
+                            <div className="text-xs text-gray-500 text-center">
+                                Starts easy, gets harder! Emojis disappear faster as you score more.
+                            </div>
+                        </div>
+                    ) : (
+                        <div 
+                            className="relative bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg mx-auto border-2 border-dashed border-blue-300"
+                            style={{ width: '300px', height: '200px' }}
+                        >
+                            {emojiVisible && (
+                                <div
+                                    onClick={popEmoji}
+                                    className="absolute w-16 h-16 cursor-pointer hover:scale-110 transition-all duration-200 flex items-center justify-center text-4xl animate-bounce select-none"
+                                    style={{ 
+                                        left: `${emojiPosition.x}%`, 
+                                        top: `${emojiPosition.y}%`,
+                                        transform: 'translate(-50%, -50%)'
+                                    }}
+                                >
+                                    {currentEmoji}
+                                </div>
+                            )}
+                            
+                            {popEffect.show && (
+                                <div 
+                                    className="absolute pointer-events-none"
+                                    style={{ left: popEffect.x, top: popEffect.y, transform: 'translate(-50%, -50%)' }}
+                                >
+                                    <div className="text-6xl animate-ping">💥</div>
+                                    <div className="text-2xl font-bold text-yellow-500 animate-bounce absolute top-8 left-1/2 transform -translate-x-1/2">
+                                        +1
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
+                    {timeLeft === 0 && !gameActive && (
+                        <div className="text-center space-y-2">
+                            <div className="text-xl font-bold text-purple-600">
+                                Game Over! Final Score: {score}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                                Reached Level {difficultyLevel}!
+                            </div>
+                            {score === highScore && score > 0 && (
+                                <div className="text-lg font-bold text-yellow-500 animate-pulse">
+                                    🎉 NEW HIGH SCORE! 🎉
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const PuppyTab = ({ puppyAction, setPuppyAction, puppyPosition, setPuppyPosition, puppyMood, setPuppyMood }) => {
+            const playBarkSound = () => {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.2);
+                    
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                } catch (error) {
+                    console.log('Audio not supported');
+                }
+            };
+
+            const getPuppyEmoji = () => {
+                switch (puppyAction) {
+                    case 'eating': return '😋';
+                    case 'excited': return '😍';
+                    case 'playing': return '🤪';
+                    case 'barking': return '😤';
+                    case 'sleepy': return '😴';
+                    case 'walking': return '🙂';
+                    default: return '😊';
+                }
+            };
+
+            const feedPuppy = (food) => {
+                setPuppyAction('excited');
+                setTimeout(() => {
+                    setPuppyAction('eating');
+                    setTimeout(() => {
+                        const reactions = ['happy', 'excited', 'sleepy'];
+                        setPuppyMood(reactions[Math.floor(Math.random() * reactions.length)]);
+                        setPuppyAction('idle');
+                    }, 2000);
+                }, 500);
+            };
+
+            const petPuppy = () => {
+                setPuppyAction('excited');
+                setTimeout(() => setPuppyAction('idle'), 2000);
+                setPuppyMood('happy');
+            };
+
+            const playWithPuppy = () => {
+                setPuppyAction('playing');
+                setTimeout(() => {
+                    setPuppyAction('barking');
+                    playBarkSound();
+                    setTimeout(() => setPuppyAction('idle'), 1000);
+                }, 2000);
+                setPuppyMood('playful');
+            };
+
+            const makePuppyBark = () => {
+                setPuppyAction('barking');
+                playBarkSound();
+                setTimeout(() => setPuppyAction('idle'), 1000);
+            };
+
+            return (
+                <div className="space-y-4">
+                    <h3 className="text-xl font-bold text-gray-800 text-center">Meet Buddy! 🐕</h3>
+                    
+                    <div 
+                        className="relative bg-gradient-to-br from-green-100 to-blue-100 rounded-lg mx-auto border-2 border-dashed border-green-300 overflow-hidden"
+                        style={{ width: '300px', height: '200px' }}
+                    >
+                        <div
+                            className={`absolute transition-all duration-1500 ease-in-out cursor-pointer ${
+                                puppyAction === 'eating' ? 'animate-bounce' : 
+                                puppyAction === 'excited' ? 'animate-pulse' : 
+                                puppyAction === 'playing' ? 'animate-spin' : 
+                                puppyAction === 'barking' ? 'animate-bounce' :
+                                puppyAction === 'walking' ? '' : ''
+                            }`}
+                            style={{ 
+                                left: `${puppyPosition.x}%`, 
+                                top: `${puppyPosition.y}%`,
+                                transform: 'translate(-50%, -50%)'
+                            }}
+                            onClick={makePuppyBark}
+                        >
+                            <div className="text-6xl select-none">
+                                🐕{getPuppyEmoji()}
+                            </div>
+                        </div>
+
+                        <div className="absolute bottom-2 left-2 text-sm font-semibold">
+                            {puppyAction === 'eating' && (
+                                <span className="text-green-600 animate-pulse">*munch munch* 🍽️</span>
+                            )}
+                            {puppyAction === 'barking' && (
+                                <span className="text-blue-600 animate-pulse">WOOF! WOOF! 🔊</span>
+                            )}
+                            {puppyAction === 'playing' && (
+                                <span className="text-purple-600 animate-pulse">*playing happily* 🎾</span>
+                            )}
+                            {puppyAction === 'excited' && (
+                                <span className="text-pink-600 animate-pulse">*tail wagging* ❤️</span>
+                            )}
+                            {puppyAction === 'walking' && (
+                                <span className="text-gray-600">*walking around* 🐾</span>
+                            )}
+                            {puppyAction === 'idle' && (
+                                <span className="text-gray-500">*sniffing around* 👃</span>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="text-center text-sm text-gray-600">
+                        Click Buddy to make him bark! 🔊
+                    </div>
+
+                    <div>
+                        <h4 className="text-md font-semibold text-gray-700 mb-2 text-center">Feed Buddy:</h4>
+                        <div className="grid grid-cols-3 gap-2">
+                            {[
+                                { emoji: '🦴', name: 'Bone' },
+                                { emoji: '🥩', name: 'Meat' },
+                                { emoji: '🍖', name: 'Steak' },
+                                { emoji: '🍞', name: 'Bread' },
+                                { emoji: '🥕', name: 'Carrot' }
+                            ].map((food) => (
+                                <button
+                                    key={food.emoji}
+                                    onClick={() => feedPuppy(food.emoji)}
+                                    className="bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 rounded-lg p-2 text-2xl transition-colors duration-200 flex flex-col items-center hover:scale-105"
+                                >
+                                    {food.emoji}
+                                    <span className="text-xs mt-1">{food.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                        <button
+                            onClick={petPuppy}
+                            className="bg-pink-200 hover:bg-pink-300 text-gray-800 font-semibold py-2 px-2 rounded-lg transition-all duration-200 hover:scale-105 text-sm"
+                        >
+                            🤚 Pet
+                        </button>
+                        <button
+                            onClick={playWithPuppy}
+                            className="bg-blue-200 hover:bg-blue-300 text-gray-800 font-semibold py-2 px-2 rounded-lg transition-all duration-200 hover:scale-105 text-sm"
+                        >
+                            🎾 Play
+                        </button>
+                        <button
+                            onClick={makePuppyBark}
+                            className="bg-orange-200 hover:bg-orange-300 text-gray-800 font-semibold py-2 px-2 rounded-lg transition-all duration-200 hover:scale-105 text-sm"
+                        >
+                            🔊 Bark
+                        </button>
+                    </div>
+
+                    <div className="text-xs text-gray-500 text-center">
+                        Buddy loves to play! He moves around on his own and reacts to everything! 🐾
+                    </div>
+                </div>
+            );
+        };
+
         function SebastianApp() {
             const [activeTab, setActiveTab] = useState('buttons');
             const [message, setMessage] = useState('');
             const [customText, setCustomText] = useState('Barnabus');
             const [isPlaying, setIsPlaying] = useState(false);
+
+            // Pet puppy state
+            const [puppyAction, setPuppyAction] = useState('idle');
+            const [puppyPosition, setPuppyPosition] = useState({ x: 50, y: 50 });
+            const [puppyMood, setPuppyMood] = useState('happy');
+
+            // Puppy moves around randomly
+            React.useEffect(() => {
+                const moveInterval = setInterval(() => {
+                    if (puppyAction === 'idle') {
+                        setPuppyPosition({
+                            x: Math.random() * 60 + 20,
+                            y: Math.random() * 40 + 30
+                        });
+                        setPuppyAction('walking');
+                        setTimeout(() => setPuppyAction('idle'), 1500);
+                    }
+                }, 3000 + Math.random() * 2000);
+
+                return () => clearInterval(moveInterval);
+            }, [puppyAction]);
 
             const handleSpeak = () => {
                 setMessage(customText);
@@ -44,398 +619,6 @@
                 setIsPlaying(false);
             };
 
-            const ButtonsTab = () => (
-                <div className="space-y-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            What should I say?
-                        </label>
-                        <input
-                            type="text"
-                            value={customText}
-                            onChange={(e) => setCustomText(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Enter text to speak..."
-                        />
-                    </div>
-                    
-                    <div className="space-y-3">
-                        {!isPlaying ? (
-                            <button 
-                                onClick={handleSpeak}
-                                disabled={!customText.trim()}
-                                className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full"
-                            >
-                                🔊 Speak: "{customText}"
-                            </button>
-                        ) : (
-                            <button 
-                                onClick={stopSpeech}
-                                className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full animate-pulse"
-                            >
-                                ⏹️ Stop Speaking
-                            </button>
-                        )}
-                    </div>
-                    
-                    <div className="flex gap-2 flex-wrap justify-center">
-                        {['Barnabus', 'Poo Poo Pee Pee', 'Eat Beans With Me', 'Reeee'].map((preset) => (
-                            <button
-                                key={preset}
-                                onClick={() => setCustomText(preset)}
-                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm transition-colors duration-200"
-                            >
-                                {preset}
-                            </button>
-                        ))}
-                    </div>
-                    
-                    {message && (
-                        <div className="mt-6 text-2xl font-semibold text-purple-600 animate-bounce">
-                            "{message}"
-                        </div>
-                    )}
-                </div>
-            );
-
-            const DrawTab = () => {
-                const canvasRef = React.useRef(null);
-                const [isDrawing, setIsDrawing] = React.useState(false);
-                const [currentColor, setCurrentColor] = React.useState('#000000');
-
-                React.useEffect(() => {
-                    const canvas = canvasRef.current;
-                    if (canvas) {
-                        const ctx = canvas.getContext('2d');
-                        ctx.lineCap = 'round';
-                        ctx.lineJoin = 'round';
-                        ctx.lineWidth = 3;
-                    }
-                }, []);
-
-                const startDrawing = (e) => {
-                    setIsDrawing(true);
-                    const canvas = canvasRef.current;
-                    const rect = canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                };
-
-                const draw = (e) => {
-                    if (!isDrawing) return;
-                    
-                    const canvas = canvasRef.current;
-                    const rect = canvas.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    
-                    const ctx = canvas.getContext('2d');
-                    ctx.strokeStyle = currentColor;
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                };
-
-                const stopDrawing = () => {
-                    setIsDrawing(false);
-                };
-
-                const clearCanvas = () => {
-                    const canvas = canvasRef.current;
-                    const ctx = canvas.getContext('2d');
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                };
-
-                return (
-                    <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-gray-800 text-center">Draw Something!</h3>
-                        
-                        <div className="flex justify-center gap-2 mb-4">
-                            {['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500'].map(color => (
-                                <button
-                                    key={color}
-                                    onClick={() => setCurrentColor(color)}
-                                    className={`w-8 h-8 rounded-full border-2 ${currentColor === color ? 'border-black' : 'border-gray-300'}`}
-                                    style={{ backgroundColor: color }}
-                                />
-                            ))}
-                        </div>
-                        
-                        <canvas
-                            ref={canvasRef}
-                            width={300}
-                            height={200}
-                            className="border-2 border-gray-300 rounded-lg mx-auto block bg-white cursor-crosshair"
-                            onMouseDown={startDrawing}
-                            onMouseMove={draw}
-                            onMouseUp={stopDrawing}
-                            onMouseLeave={stopDrawing}
-                        />
-                        
-                        <button
-                            onClick={clearCanvas}
-                            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full"
-                        >
-                            🗑️ Clear Drawing
-                        </button>
-                    </div>
-                );
-            };
-
-            const GameTab = () => {
-                const [score, setScore] = React.useState(0);
-                const [timeLeft, setTimeLeft] = React.useState(30);
-                const [gameActive, setGameActive] = React.useState(false);
-                const [emojiPosition, setEmojiPosition] = React.useState({ x: 50, y: 50 });
-                const [currentEmoji, setCurrentEmoji] = React.useState('🎈');
-                const [popEffect, setPopEffect] = React.useState({ show: false, x: 0, y: 0 });
-                const [emojiVisible, setEmojiVisible] = React.useState(true);
-                const [highScore, setHighScore] = React.useState(() => {
-                    const saved = localStorage.getItem('sebastianHighScore');
-                    return saved ? parseInt(saved) : 0;
-                });
-
-                const emojis = ['🎈', '🎉', '⭐', '🍎', '🍌', '🐸', '🌈', '⚽', '🎯', '🎊'];
-
-                // Progressive difficulty - emoji stays visible for less time as score increases
-                const getEmojiDisplayTime = (currentScore) => {
-                    const baseTime = 3000; // Start at 3 seconds
-                    const minTime = 800;   // Minimum 0.8 seconds
-                    const reduction = Math.floor(currentScore / 3) * 200; // Reduce by 200ms every 3 points
-                    return Math.max(minTime, baseTime - reduction);
-                };
-
-                // Create pop sound effect using Web Audio API
-                const playPopSound = () => {
-                    try {
-                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                        
-                        const oscillator = audioContext.createOscillator();
-                        const gainNode = audioContext.createGain();
-                        
-                        oscillator.connect(gainNode);
-                        gainNode.connect(audioContext.destination);
-                        
-                        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                        oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
-                        
-                        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                        gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
-                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-                        
-                        oscillator.start(audioContext.currentTime);
-                        oscillator.stop(audioContext.currentTime + 0.1);
-                    } catch (error) {
-                        console.log('Audio not supported, playing without sound');
-                    }
-                };
-
-                // Game timer - using useRef to avoid stale closures
-                const gameTimerRef = React.useRef(null);
-                const emojiTimerRef = React.useRef(null);
-
-                // Main game timer
-                React.useEffect(() => {
-                    if (gameActive) {
-                        gameTimerRef.current = setInterval(() => {
-                            setTimeLeft(prevTime => {
-                                if (prevTime <= 1) {
-                                    setGameActive(false);
-                                    return 0;
-                                }
-                                return prevTime - 1;
-                            });
-                        }, 1000);
-                    }
-
-                    return () => {
-                        if (gameTimerRef.current) {
-                            clearInterval(gameTimerRef.current);
-                        }
-                    };
-                }, [gameActive]);
-
-                // Handle game end
-                React.useEffect(() => {
-                    if (!gameActive && timeLeft === 0) {
-                        if (score > highScore) {
-                            setHighScore(score);
-                            localStorage.setItem('sebastianHighScore', score.toString());
-                        }
-                        // Clear emoji timer when game ends
-                        if (emojiTimerRef.current) {
-                            clearTimeout(emojiTimerRef.current);
-                        }
-                    }
-                }, [gameActive, timeLeft, score, highScore]);
-
-                const startGame = () => {
-                    // Clear any existing timers
-                    if (gameTimerRef.current) {
-                        clearInterval(gameTimerRef.current);
-                    }
-                    if (emojiTimerRef.current) {
-                        clearTimeout(emojiTimerRef.current);
-                    }
-
-                    setScore(0);
-                    setTimeLeft(30);
-                    setGameActive(true);
-                    setEmojiVisible(true);
-                    moveEmoji();
-                };
-
-                const moveEmoji = () => {
-                    if (!gameActive) return;
-
-                    setEmojiPosition({
-                        x: Math.random() * 70 + 15,
-                        y: Math.random() * 60 + 20
-                    });
-                    setCurrentEmoji(emojis[Math.floor(Math.random() * emojis.length)]);
-                    setEmojiVisible(true);
-
-                    // Hide emoji after display time based on difficulty
-                    const displayTime = getEmojiDisplayTime(score);
-                    emojiTimerRef.current = setTimeout(() => {
-                        setEmojiVisible(false);
-                        // Show new emoji after a brief pause
-                        setTimeout(() => {
-                            if (gameActive) moveEmoji();
-                        }, 500);
-                    }, displayTime);
-                };
-
-                const popEmoji = (e) => {
-                    if (gameActive && emojiVisible) {
-                        playPopSound();
-                        
-                        const rect = e.currentTarget.parentElement.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const y = e.clientY - rect.top;
-                        
-                        setPopEffect({ show: true, x, y });
-                        setTimeout(() => setPopEffect({ show: false, x: 0, y: 0 }), 600);
-                        
-                        setScore(prevScore => prevScore + 1);
-                        
-                        // Clear current emoji timer and show new emoji
-                        if (emojiTimerRef.current) {
-                            clearTimeout(emojiTimerRef.current);
-                        }
-                        setTimeout(() => {
-                            if (gameActive) moveEmoji();
-                        }, 100);
-                    }
-                };
-
-                // Cleanup on unmount
-                React.useEffect(() => {
-                    return () => {
-                        if (gameTimerRef.current) {
-                            clearInterval(gameTimerRef.current);
-                        }
-                        if (emojiTimerRef.current) {
-                            clearTimeout(emojiTimerRef.current);
-                        }
-                    };
-                }, []);
-
-                // Calculate current difficulty level for display
-                const difficultyLevel = Math.floor(score / 3) + 1;
-                const currentDisplayTime = getEmojiDisplayTime(score);
-
-                return (
-                    <div className="space-y-4">
-                        <h3 className="text-xl font-bold text-gray-800 text-center">Emoji Pop!</h3>
-                        
-                        <div className="flex justify-between text-lg font-semibold">
-                            <span>Score: {score}</span>
-                            <span className={timeLeft <= 5 ? 'text-red-500 animate-pulse' : ''}>
-                                Time: {timeLeft}s
-                            </span>
-                        </div>
-                        
-                        <div className="text-center space-y-1">
-                            <div className="text-sm font-semibold text-purple-600">
-                                🏆 High Score: {highScore}
-                            </div>
-                            {gameActive && (
-                                <div className="text-xs text-gray-600">
-                                    Level {difficultyLevel} • {(currentDisplayTime/1000).toFixed(1)}s display time
-                                </div>
-                            )}
-                        </div>
-                        
-                        {!gameActive ? (
-                            <div className="space-y-3">
-                                <button
-                                    onClick={startGame}
-                                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full"
-                                >
-                                    🎮 Start Game
-                                </button>
-                                <div className="text-xs text-gray-500 text-center">
-                                    Starts easy, gets harder! Emojis disappear faster as you score more.
-                                </div>
-                            </div>
-                        ) : (
-                            <div 
-                                className="relative bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg mx-auto border-2 border-dashed border-blue-300"
-                                style={{ width: '300px', height: '200px' }}
-                            >
-                                {/* Moving Emoji */}
-                                {emojiVisible && (
-                                    <div
-                                        onClick={popEmoji}
-                                        className="absolute w-16 h-16 cursor-pointer hover:scale-110 transition-all duration-200 flex items-center justify-center text-4xl animate-bounce select-none"
-                                        style={{ 
-                                            left: `${emojiPosition.x}%`, 
-                                            top: `${emojiPosition.y}%`,
-                                            transform: 'translate(-50%, -50%)'
-                                        }}
-                                    >
-                                        {currentEmoji}
-                                    </div>
-                                )}
-                                
-                                {/* Pop Effect */}
-                                {popEffect.show && (
-                                    <div 
-                                        className="absolute pointer-events-none"
-                                        style={{ left: popEffect.x, top: popEffect.y, transform: 'translate(-50%, -50%)' }}
-                                    >
-                                        <div className="text-6xl animate-ping">💥</div>
-                                        <div className="text-2xl font-bold text-yellow-500 animate-bounce absolute top-8 left-1/2 transform -translate-x-1/2">
-                                            +1
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        
-                        {timeLeft === 0 && !gameActive && (
-                            <div className="text-center space-y-2">
-                                <div className="text-xl font-bold text-purple-600">
-                                    Game Over! Final Score: {score}
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                    Reached Level {difficultyLevel}!
-                                </div>
-                                {score === highScore && score > 0 && (
-                                    <div className="text-lg font-bold text-yellow-500 animate-pulse">
-                                        🎉 NEW HIGH SCORE! 🎉
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
             return (
                 <div className="flex flex-col items-center justify-center min-h-screen bg-purple-200 p-8">
                     <div className="bg-white rounded-lg shadow-lg p-8 text-center max-w-md w-full">
@@ -444,7 +627,7 @@
                         <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
                             <button
                                 onClick={() => setActiveTab('buttons')}
-                                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors duration-200 ${
+                                className={`flex-1 py-2 px-3 rounded-md font-medium transition-colors duration-200 text-sm ${
                                     activeTab === 'buttons' 
                                         ? 'bg-blue-500 text-white' 
                                         : 'text-gray-700 hover:text-blue-500'
@@ -454,7 +637,7 @@
                             </button>
                             <button
                                 onClick={() => setActiveTab('draw')}
-                                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors duration-200 ${
+                                className={`flex-1 py-2 px-3 rounded-md font-medium transition-colors duration-200 text-sm ${
                                     activeTab === 'draw' 
                                         ? 'bg-blue-500 text-white' 
                                         : 'text-gray-700 hover:text-blue-500'
@@ -464,19 +647,48 @@
                             </button>
                             <button
                                 onClick={() => setActiveTab('game')}
-                                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors duration-200 ${
+                                className={`flex-1 py-2 px-3 rounded-md font-medium transition-colors duration-200 text-sm ${
                                     activeTab === 'game' 
                                         ? 'bg-blue-500 text-white' 
-                                        : 't'
+                                        : 'text-gray-700 hover:text-blue-500'
                                 }`}
                             >
                                 🎮 Game
                             </button>
+                            <button
+                                onClick={() => setActiveTab('puppy')}
+                                className={`flex-1 py-2 px-3 rounded-md font-medium transition-colors duration-200 text-sm ${
+                                    activeTab === 'puppy' 
+                                        ? 'bg-blue-500 text-white' 
+                                        : 'text-gray-700 hover:text-blue-500'
+                                }`}
+                            >
+                                🐕 Buddy
+                            </button>
                         </div>
 
-                        {activeTab === 'buttons' && <ButtonsTab />}
+                        {activeTab === 'buttons' && (
+                            <ButtonsTab 
+                                customText={customText}
+                                setCustomText={setCustomText}
+                                handleSpeak={handleSpeak}
+                                stopSpeech={stopSpeech}
+                                isPlaying={isPlaying}
+                                message={message}
+                            />
+                        )}
                         {activeTab === 'draw' && <DrawTab />}
                         {activeTab === 'game' && <GameTab />}
+                        {activeTab === 'puppy' && (
+                            <PuppyTab 
+                                puppyAction={puppyAction}
+                                setPuppyAction={setPuppyAction}
+                                puppyPosition={puppyPosition}
+                                setPuppyPosition={setPuppyPosition}
+                                puppyMood={puppyMood}
+                                setPuppyMood={setPuppyMood}
+                            />
+                        )}
                         
                         <div className="mt-6 text-xs text-gray-500">
                             Made for Sebastian! 🎉
