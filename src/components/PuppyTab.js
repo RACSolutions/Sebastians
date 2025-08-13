@@ -1,6 +1,34 @@
 // PuppyTab component for Sebastian's Silly App
 const PuppyTab = ({ puppyAction, setPuppyAction, puppyPosition, setPuppyPosition, puppyMood, setPuppyMood }) => {
 
+    // Play sniff sound periodically when Buddy is in idle/sniffing mode
+    React.useEffect(() => {
+        let sniffInterval;
+        
+        if (puppyAction === 'idle') {
+            // Play first sniff sound after a short delay
+            const initialTimer = setTimeout(() => {
+                if (window.playSniffSound && puppyAction === 'idle') {
+                    console.log('🐕 Playing sniff sound - Buddy is sniffing around');
+                    window.playSniffSound();
+                }
+            }, 500);
+            
+            // Then play sniff sound every 4-6 seconds while idle
+            sniffInterval = setInterval(() => {
+                if (window.playSniffSound && puppyAction === 'idle') {
+                    console.log('🐕 Playing periodic sniff sound');
+                    window.playSniffSound();
+                }
+            }, 4000 + Math.random() * 2000); // Random between 4-6 seconds
+            
+            return () => {
+                clearTimeout(initialTimer);
+                clearInterval(sniffInterval);
+            };
+        }
+    }, [puppyAction]);
+
     const getPuppyEmoji = () => {
         switch (puppyAction) {
             case 'eating': return '😋';
@@ -17,6 +45,10 @@ const PuppyTab = ({ puppyAction, setPuppyAction, puppyPosition, setPuppyPosition
         setPuppyAction('excited');
         setTimeout(() => {
             setPuppyAction('eating');
+            // Play chomp sound when eating starts
+            if (window.playChompSound) {
+                window.playChompSound();
+            }
             setTimeout(() => {
                 const reactions = ['happy', 'excited', 'sleepy'];
                 setPuppyMood(reactions[Math.floor(Math.random() * reactions.length)]);
@@ -35,7 +67,9 @@ const PuppyTab = ({ puppyAction, setPuppyAction, puppyPosition, setPuppyPosition
         setPuppyAction('playing');
         setTimeout(() => {
             setPuppyAction('barking');
-            playBarkSound(); // From audioUtils.js
+            if (window.playBarkSound) {
+                window.playBarkSound();
+            }
             setTimeout(() => setPuppyAction('idle'), 1000);
         }, 2000);
         setPuppyMood('playful');
@@ -43,7 +77,9 @@ const PuppyTab = ({ puppyAction, setPuppyAction, puppyPosition, setPuppyPosition
 
     const makePuppyBark = () => {
         setPuppyAction('barking');
-        playBarkSound(); // From audioUtils.js
+        if (window.playBarkSound) {
+            window.playBarkSound();
+        }
         setTimeout(() => setPuppyAction('idle'), 1000);
     };
 

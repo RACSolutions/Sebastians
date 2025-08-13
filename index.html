@@ -111,6 +111,86 @@
             }
         };
 
+        // Chomp sound for when Buddy eats
+        const playChompSound = () => {
+            console.log('🍽️ Attempting to play chomp sound...');
+            
+            try {
+                const audio = new Audio('./Chomp.mp3');
+                audio.volume = 0.6; // Slightly quieter than bark
+                
+                // Add event listeners for debugging
+                audio.addEventListener('loadstart', () => {
+                    console.log('🔄 Chomp audio loading started...');
+                });
+                
+                audio.addEventListener('canplay', () => {
+                    console.log('✅ Chomp audio can play!');
+                });
+                
+                audio.addEventListener('error', (e) => {
+                    console.log('❌ Chomp audio error:', e);
+                    console.log('🔄 No chomp sound available');
+                });
+                
+                // Attempt to play
+                const playPromise = audio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log('🎉 Chomp sound playing successfully!');
+                        })
+                        .catch(error => {
+                            console.log('❌ Chomp play failed:', error.message);
+                        });
+                }
+                
+            } catch (error) {
+                console.log('❌ Chomp audio setup failed:', error);
+            }
+        };
+
+        // Sniff sound for when Buddy is sniffing around
+        const playSniffSound = () => {
+            console.log('👃 Attempting to play sniff sound...');
+            
+            try {
+                const audio = new Audio('./dog-sniff.mp3');
+                audio.volume = 0.4; // Quieter since it plays more frequently
+                
+                // Add event listeners for debugging
+                audio.addEventListener('loadstart', () => {
+                    console.log('🔄 Sniff audio loading started...');
+                });
+                
+                audio.addEventListener('canplay', () => {
+                    console.log('✅ Sniff audio can play!');
+                });
+                
+                audio.addEventListener('error', (e) => {
+                    console.log('❌ Sniff audio error:', e);
+                    console.log('🔄 No sniff sound available');
+                });
+                
+                // Attempt to play
+                const playPromise = audio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log('🎉 Sniff sound playing successfully!');
+                        })
+                        .catch(error => {
+                            console.log('❌ Sniff play failed:', error.message);
+                        });
+                }
+                
+            } catch (error) {
+                console.log('❌ Sniff audio setup failed:', error);
+            }
+        };
+
         // Fallback synthesized bark sound
         const playFallbackBarkSound = () => {
             console.log('🔊 Playing fallback synthesized bark');
@@ -159,6 +239,8 @@
         window.stopSpeech = stopSpeech;
         window.playPopSound = playPopSound;
         window.playBarkSound = playBarkSound;
+        window.playChompSound = playChompSound;
+        window.playSniffSound = playSniffSound;
     </script>
     
     <!-- Load components in order -->
