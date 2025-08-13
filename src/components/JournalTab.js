@@ -474,8 +474,8 @@ const JournalTab = () => {
                             placeholder="What happened today? How did you feel? What did you learn? ✨"
                             className="w-full h-52 p-2 bg-transparent border-none outline-none resize-none text-gray-800"
                             style={{ 
-                                fontFamily: '"Comic Sans MS", cursive, system-ui',
-                                fontSize: '15px',
+                                fontFamily: 'system-ui, -apple-system, sans-serif',
+                                fontSize: '16px',
                                 lineHeight: '30px', // Match the line height
                                 backgroundImage: 'none'
                             }}
