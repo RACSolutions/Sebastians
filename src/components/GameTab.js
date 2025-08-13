@@ -95,7 +95,10 @@ const GameTab = () => {
 
     const popEmoji = (e) => {
         if (gameActive && emojiVisible) {
-            playPopSound(); // From audioUtils.js
+            // Use the global playPopSound function
+            if (window.playPopSound) {
+                window.playPopSound();
+            }
             
             const rect = e.currentTarget.parentElement.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -165,35 +168,37 @@ const GameTab = () => {
                     </div>
                 </div>
             ) : (
-                <div 
-                    className="relative bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg mx-auto border-2 border-dashed border-blue-300"
-                    style={{ width: '300px', height: '200px' }}
-                >
-                    {emojiVisible && (
-                        <div
-                            onClick={popEmoji}
-                            className="absolute w-16 h-16 cursor-pointer hover:scale-110 transition-all duration-200 flex items-center justify-center text-4xl animate-bounce select-none"
-                            style={{ 
-                                left: `${emojiPosition.x}%`, 
-                                top: `${emojiPosition.y}%`,
-                                transform: 'translate(-50%, -50%)'
-                            }}
-                        >
-                            {currentEmoji}
-                        </div>
-                    )}
-                    
-                    {popEffect.show && (
-                        <div 
-                            className="absolute pointer-events-none"
-                            style={{ left: popEffect.x, top: popEffect.y, transform: 'translate(-50%, -50%)' }}
-                        >
-                            <div className="text-6xl animate-ping">💥</div>
-                            <div className="text-2xl font-bold text-yellow-500 animate-bounce absolute top-8 left-1/2 transform -translate-x-1/2">
-                                +1
+                <div className="w-full px-2">
+                    <div 
+                        className="relative bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg border-2 border-dashed border-blue-300 w-full mx-auto"
+                        style={{ height: '180px' }}
+                    >
+                        {emojiVisible && (
+                            <div
+                                onClick={popEmoji}
+                                className="absolute w-16 h-16 cursor-pointer hover:scale-110 transition-all duration-200 flex items-center justify-center text-4xl animate-bounce select-none"
+                                style={{ 
+                                    left: `${emojiPosition.x}%`, 
+                                    top: `${emojiPosition.y}%`,
+                                    transform: 'translate(-50%, -50%)'
+                                }}
+                            >
+                                {currentEmoji}
                             </div>
-                        </div>
-                    )}
+                        )}
+                        
+                        {popEffect.show && (
+                            <div 
+                                className="absolute pointer-events-none"
+                                style={{ left: popEffect.x, top: popEffect.y, transform: 'translate(-50%, -50%)' }}
+                            >
+                                <div className="text-6xl animate-ping">💥</div>
+                                <div className="text-2xl font-bold text-yellow-500 animate-bounce absolute top-8 left-1/2 transform -translate-x-1/2">
+                                    +1
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
             
