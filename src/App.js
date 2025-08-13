@@ -21,7 +21,7 @@ function SebastianApp() {
 
     // App categories with their respective pages
     const appCategories = {
-        all: ['buttons', 'draw', 'piano', 'story', 'memory', 'game', 'journal', 'weather', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz', 'coding'],
+        all: ['buttons', 'draw', 'piano', 'story', 'memory', 'game', 'journal', 'weather', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz', 'riddles', 'coding'],
         games: ['memory', 'game', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz'],
         creative: ['draw', 'piano', 'story', 'journal'],
         tools: ['weather', 'buttons', 'coding'],
