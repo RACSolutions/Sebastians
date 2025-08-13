@@ -57,7 +57,7 @@ function SebastianApp() {
     // Main Menu Component
     const MainMenu = () => (
         <div className="space-y-6">
-            <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Sebastian's Fun App! 🥰</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Sebastian's Silly App</h1>
             <p className="text-gray-600 text-center mb-6">Choose what you want to do!</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -95,6 +95,15 @@ function SebastianApp() {
                     <div className="text-4xl mb-2">📚</div>
                     <div className="text-xl">Story Generator</div>
                     <div className="text-sm opacity-75">Create silly Mad Libs stories!</div>
+                </button>
+                
+                <button
+                    onClick={() => goToPage('memory')}
+                    className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-6 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
+                >
+                    <div className="text-4xl mb-2">🧠</div>
+                    <div className="text-xl">Memory Match</div>
+                    <div className="text-sm opacity-75">Find matching pairs of emojis!</div>
                 </button>
                 
                 <button
@@ -173,6 +182,13 @@ function SebastianApp() {
                     <div>
                         <BackButton title="Stories" />
                         <StoryTab />
+                    </div>
+                )}
+                
+                {currentPage === 'memory' && (
+                    <div>
+                        <BackButton title="Memory" />
+                        <MemoryTab />
                     </div>
                 )}
                 
