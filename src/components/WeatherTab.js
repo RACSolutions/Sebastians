@@ -288,13 +288,22 @@ const WeatherTab = () => {
 
     // Helper function to set weather data from API response
     const setWeatherFromAPI = (data) => {
+        console.log('🔄 Setting weather data:', {
+            city: data.location.name,
+            country: data.location.country,
+            temp: data.current.temp_c,
+            condition: data.current.condition.text,
+            humidity: data.current.humidity,
+            wind: data.current.wind_kph
+        });
+        
         // Transform WeatherAPI.com data to match our component structure
         const transformedData = {
             name: data.location.name,
             sys: { country: data.location.country },
             main: { 
-                temp: data.current.temp_c, 
-                feels_like: data.current.feelslike_c, 
+                temp: Math.round(data.current.temp_c), 
+                feels_like: Math.round(data.current.feelslike_c), 
                 humidity: data.current.humidity 
             },
             weather: [{ 
@@ -302,15 +311,19 @@ const WeatherTab = () => {
                 description: data.current.condition.text.toLowerCase(), 
                 icon: data.current.condition.icon 
             }],
-            wind: { speed: data.current.wind_kph / 3.6 }, // Convert km/h to m/s
+            wind: { speed: Math.round(data.current.wind_kph / 3.6 * 10) / 10 }, // Convert km/h to m/s, round to 1 decimal
             visibility: data.current.vis_km,
             uv: data.current.uv
         };
         
+        console.log('✅ Transformed weather data:', transformedData);
+        
         setWeather(transformedData);
-        setLocation(`${data.location.name}, ${data.location.region}, ${data.location.country}`);
+        setLocation(`${data.location.name}, ${data.location.region || data.location.country}, ${data.location.country}`);
         setLastUpdated(new Date());
         setError(null); // Clear any previous errors
+        
+        console.log('🎯 Weather state updated successfully');
     };
 
     // Manual city search function
