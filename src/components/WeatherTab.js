@@ -111,31 +111,63 @@ const WeatherTab = () => {
         }
     };
 
-    // Fetch weather data
+    // Fetch weather data with multiple location strategies
     const fetchWeather = async () => {
         setLoading(true);
         setError(null);
         
         try {
-            // Try to get user's location, but don't wait too long
-            let position;
+            // Strategy 1: Try GPS location
+            console.log('🎯 Trying GPS location...');
             try {
-                position = await getCurrentLocation();
+                const position = await getCurrentLocation();
                 const { latitude, longitude } = position;
+                console.log('✅ GPS location found:', latitude, longitude);
                 await fetchWeatherByCoordinates(latitude, longitude);
+                return; // Success! Exit early
             } catch (locationError) {
-                console.log('Location unavailable, using default city:', locationError.message);
-                // Fallback to Sydney if location fails
-                await fetchWeatherByCity('Sydney');
+                console.log('❌ GPS location failed:', locationError.message);
             }
             
+            // Strategy 2: Try IP-based location
+            console.log('🌐 Trying IP-based location...');
+            try {
+                await fetchWeatherByIP();
+                return; // Success! Exit early
+            } catch (ipError) {
+                console.log('❌ IP location failed:', ipError.message);
+            }
+            
+            // Strategy 3: Default to Sydney
+            console.log('🏙️ Using default city: Sydney');
+            await fetchWeatherByCity('Sydney');
+            
         } catch (err) {
-            console.error('Weather fetch error:', err);
-            setError('Using demo weather data. Real weather coming soon!');
+            console.error('❌ All weather methods failed:', err);
+            setError('Unable to get weather data. Using demo mode.');
             await fetchMockWeather();
         } finally {
             setLoading(false);
         }
+    };
+
+    // Fetch weather using IP-based geolocation
+    const fetchWeatherByIP = async () => {
+        const API_KEY = '9c0b0d3637044398a4f82511251308';
+        
+        // WeatherAPI can auto-detect location using IP
+        const API_URL = `https://api.weatherapi.com/v1/current.json?key=${API_KEY}&q=auto:ip&aqi=no`;
+        
+        console.log('📡 Fetching weather by IP...');
+        const response = await fetch(API_URL);
+        
+        if (!response.ok) {
+            throw new Error(`IP location API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ IP location weather:', data.location.name, data.location.country);
+        setWeatherFromAPI(data);
     };
 
     // Fetch weather by coordinates
@@ -153,45 +185,89 @@ const WeatherTab = () => {
         setWeatherFromAPI(data);
     };
 
-    // Get user's current location with better error handling
+    // Get user's current location with comprehensive error handling
     const getCurrentLocation = () => {
         return new Promise((resolve, reject) => {
+            // Check if geolocation is supported
             if (!navigator.geolocation) {
                 reject(new Error('Geolocation not supported by this browser'));
                 return;
             }
 
-            // Set shorter timeout and less strict settings for better compatibility
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    resolve({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
-                    });
-                },
-                (error) => {
-                    let errorMessage = 'Location access unavailable';
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage = 'Location access denied by user';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage = 'Location information unavailable';
-                            break;
-                        case error.TIMEOUT:
-                            errorMessage = 'Location request timed out';
-                            break;
-                        default:
-                            errorMessage = 'Unknown location error';
-                    }
-                    reject(new Error(errorMessage));
-                },
+            console.log('🔍 Attempting to get location...');
+
+            // Try multiple location strategies
+            const options = [
+                // Strategy 1: High accuracy GPS
                 {
-                    enableHighAccuracy: false, // Less strict for better compatibility
-                    timeout: 5000,             // Shorter timeout
-                    maximumAge: 600000         // 10 minutes cache
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                },
+                // Strategy 2: Network-based location (faster, less accurate)
+                {
+                    enableHighAccuracy: false,
+                    timeout: 8000,
+                    maximumAge: 60000
+                },
+                // Strategy 3: Cached location (fastest)
+                {
+                    enableHighAccuracy: false,
+                    timeout: 5000,
+                    maximumAge: 300000
                 }
-            );
+            ];
+
+            let attemptCount = 0;
+
+            const tryGetLocation = () => {
+                if (attemptCount >= options.length) {
+                    reject(new Error('All location attempts failed'));
+                    return;
+                }
+
+                const currentOptions = options[attemptCount];
+                console.log(`📍 Location attempt ${attemptCount + 1}:`, currentOptions);
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        console.log('✅ Location success:', {
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        });
+                        
+                        resolve({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        });
+                    },
+                    (error) => {
+                        console.log(`❌ Location attempt ${attemptCount + 1} failed:`, {
+                            code: error.code,
+                            message: error.message,
+                            PERMISSION_DENIED: error.PERMISSION_DENIED,
+                            POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
+                            TIMEOUT: error.TIMEOUT
+                        });
+
+                        attemptCount++;
+                        
+                        // If it's a permission denied, don't retry
+                        if (error.code === error.PERMISSION_DENIED) {
+                            reject(new Error('Location access denied by user'));
+                            return;
+                        }
+                        
+                        // Try next strategy
+                        setTimeout(tryGetLocation, 500);
+                    },
+                    currentOptions
+                );
+            };
+
+            tryGetLocation();
         });
     };
 
@@ -473,6 +549,13 @@ const WeatherTab = () => {
                         ℹ️ {error}
                     </div>
                 )}
+
+                {/* Debug Info for Development */}
+                <div className="text-xs text-gray-400 bg-gray-50 rounded p-2 mt-2">
+                    <div>🔧 Location Status: {navigator.geolocation ? 'Available' : 'Not Available'}</div>
+                    <div>🌍 HTTPS: {location.protocol === 'https:' ? 'Yes' : 'No (required for GPS)'}</div>
+                    <div>📱 User Agent: {navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}</div>
+                </div>
             </div>
 
             {/* Fun Weather Facts */}
