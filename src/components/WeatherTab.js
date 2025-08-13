@@ -563,13 +563,6 @@ const WeatherTab = () => {
                         ℹ️ {error}
                     </div>
                 )}
-
-                {/* Debug Info for Development */}
-                <div className="text-xs text-gray-400 bg-gray-50 rounded p-2 mt-2">
-                    <div>🔧 Location Status: {navigator.geolocation ? 'Available' : 'Not Available'}</div>
-                    <div>🌍 HTTPS: {location.protocol === 'https:' ? 'Yes' : 'No (required for GPS)'}</div>
-                    <div>📱 User Agent: {navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'}</div>
-                </div>
             </div>
 
             {/* Fun Weather Facts */}
