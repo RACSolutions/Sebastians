@@ -21,11 +21,12 @@ function SebastianApp() {
 
     // App categories with their respective pages
     const appCategories = {
-        all: ['buttons', 'draw', 'piano', 'story', 'memory', 'game', 'journal', 'weather', 'puppy', 'riddles', 'snake', 'tictactoe', 'simon', 'quiz'],
-        games: ['memory', 'game', 'puppy', 'riddles', 'snake', 'tictactoe', 'simon', 'quiz'],
+        all: ['buttons', 'draw', 'piano', 'story', 'memory', 'game', 'journal', 'weather', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz', 'coding'],
+        games: ['memory', 'game', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz'],
         creative: ['draw', 'piano', 'story', 'journal'],
-        tools: ['weather', 'buttons'],
-        fun: ['buttons', 'piano', 'story', 'game', 'puppy', 'riddles', 'snake', 'tictactoe', 'simon', 'quiz']
+        tools: ['weather', 'buttons', 'coding'],
+        learning: ['coding', 'quiz', 'story'],
+        fun: ['buttons', 'piano', 'story', 'game', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz']
     };
 
     // App information with categories, unique colors, and development status
@@ -43,7 +44,8 @@ function SebastianApp() {
         snake: { title: 'Snake Game', emoji: '🐍', description: 'Eat apples and grow your snake!', category: 'games', gradient: 'from-lime-400 to-green-600', status: 'development' },
         tictactoe: { title: 'Tic Tac Toe', emoji: '⭕', description: 'Classic X\'s and O\'s game!', category: 'games', gradient: 'from-indigo-400 to-blue-600', status: 'development' },
         simon: { title: 'Simon Says', emoji: '🔴', description: 'Remember the color sequence!', category: 'games', gradient: 'from-rose-400 to-pink-600', status: 'development' },
-        quiz: { title: 'Fun Quiz', emoji: '❓', description: 'Test your knowledge with fun questions!', category: 'games', gradient: 'from-violet-400 to-purple-600', status: 'development' }
+        quiz: { title: 'Fun Quiz', emoji: '❓', description: 'Test your knowledge with fun questions!', category: 'games', gradient: 'from-violet-400 to-purple-600', status: 'development' },
+        coding: { title: 'Learn to Code', emoji: '💻', description: 'Drag and drop blocks to code!', category: 'learning', gradient: 'from-emerald-400 to-teal-600', status: 'development' }
     };
 
     // Filter categories
@@ -353,7 +355,7 @@ function SebastianApp() {
                 onClick={goBack}
                 className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center"
             >
-                ← Back
+                ← Menu
             </button>
             <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
             <div className="w-16"></div> {/* Spacer for centering */}
@@ -474,6 +476,13 @@ function SebastianApp() {
                     <div>
                         <BackButton title="Fun Quiz" />
                         <FunQuiz />
+                    </div>
+                )}
+                
+                {currentPage === 'coding' && (
+                    <div>
+                        <BackButton title="Learn to Code" />
+                        <CodingTab />
                     </div>
                 )}
             </div>
