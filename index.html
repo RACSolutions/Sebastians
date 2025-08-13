@@ -83,16 +83,14 @@
                     ctx.lineJoin = 'round';
                     ctx.lineWidth = 3;
                     
-                    // Set canvas size to fit container on mobile
+                    // Set canvas to full container width
                     const container = canvas.parentElement;
-                    const containerWidth = container.clientWidth - 40; // Account for padding
-                    const maxWidth = 280; // Max width for larger screens
-                    const canvasWidth = Math.min(containerWidth, maxWidth);
-                    const canvasHeight = Math.round(canvasWidth * 0.67); // Maintain aspect ratio
+                    const containerWidth = container.clientWidth - 20; // Small margin
+                    const canvasHeight = Math.round(containerWidth * 0.6); // Good aspect ratio
                     
-                    canvas.width = canvasWidth;
+                    canvas.width = containerWidth;
                     canvas.height = canvasHeight;
-                    canvas.style.width = canvasWidth + 'px';
+                    canvas.style.width = containerWidth + 'px';
                     canvas.style.height = canvasHeight + 'px';
                 }
             }, []);
@@ -144,7 +142,7 @@
             };
 
             return (
-                <div className="space-y-4 px-2">
+                <div className="space-y-4">
                     <h3 className="text-xl font-bold text-gray-800 text-center">Draw Something!</h3>
                     
                     <div className="flex justify-center gap-1 mb-4 flex-wrap">
@@ -158,10 +156,10 @@
                         ))}
                     </div>
                     
-                    <div className="flex justify-center">
+                    <div className="w-full px-2">
                         <canvas
                             ref={canvasRef}
-                            className="border-2 border-gray-300 rounded-lg bg-white cursor-crosshair touch-none max-w-full"
+                            className="border-2 border-gray-300 rounded-lg bg-white cursor-crosshair touch-none w-full"
                             style={{ touchAction: 'none' }}
                             // Mouse events
                             onMouseDown={startDrawing}
@@ -499,8 +497,8 @@
                     <h3 className="text-xl font-bold text-gray-800 text-center">Meet Buddy! 🐕</h3>
                     
                     <div 
-                        className="relative bg-gradient-to-br from-green-100 to-blue-100 rounded-lg mx-auto border-2 border-dashed border-green-300 overflow-hidden"
-                        style={{ width: '300px', height: '200px' }}
+                        className="relative bg-gradient-to-br from-green-100 to-blue-100 rounded-lg border-2 border-dashed border-green-300 overflow-hidden w-full mx-auto"
+                        style={{ maxWidth: '100%', height: '180px' }}
                     >
                         <div
                             className={`absolute transition-all duration-1500 ease-in-out cursor-pointer ${
@@ -550,7 +548,7 @@
 
                     <div>
                         <h4 className="text-md font-semibold text-gray-700 mb-2 text-center">Feed Buddy:</h4>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                             {[
                                 { emoji: '🦴', name: 'Bone' },
                                 { emoji: '🥩', name: 'Meat' },
@@ -561,7 +559,7 @@
                                 <button
                                     key={food.emoji}
                                     onClick={() => feedPuppy(food.emoji)}
-                                    className="bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 rounded-lg p-2 text-2xl transition-colors duration-200 flex flex-col items-center hover:scale-105"
+                                    className="bg-yellow-100 hover:bg-yellow-200 border border-yellow-300 rounded-lg p-2 text-xl transition-colors duration-200 flex flex-col items-center hover:scale-105"
                                 >
                                     {food.emoji}
                                     <span className="text-xs mt-1">{food.name}</span>
@@ -570,22 +568,22 @@
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-1">
                         <button
                             onClick={petPuppy}
-                            className="bg-pink-200 hover:bg-pink-300 text-gray-800 font-semibold py-2 px-2 rounded-lg transition-all duration-200 hover:scale-105 text-sm"
+                            className="bg-pink-200 hover:bg-pink-300 text-gray-800 font-semibold py-2 px-1 rounded-lg transition-all duration-200 hover:scale-105 text-xs"
                         >
                             🤚 Pet
                         </button>
                         <button
                             onClick={playWithPuppy}
-                            className="bg-blue-200 hover:bg-blue-300 text-gray-800 font-semibold py-2 px-2 rounded-lg transition-all duration-200 hover:scale-105 text-sm"
+                            className="bg-blue-200 hover:bg-blue-300 text-gray-800 font-semibold py-2 px-1 rounded-lg transition-all duration-200 hover:scale-105 text-xs"
                         >
                             🎾 Play
                         </button>
                         <button
                             onClick={makePuppyBark}
-                            className="bg-orange-200 hover:bg-orange-300 text-gray-800 font-semibold py-2 px-2 rounded-lg transition-all duration-200 hover:scale-105 text-sm"
+                            className="bg-orange-200 hover:bg-orange-300 text-gray-800 font-semibold py-2 px-1 rounded-lg transition-all duration-200 hover:scale-105 text-xs"
                         >
                             🔊 Bark
                         </button>
