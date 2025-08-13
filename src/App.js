@@ -80,8 +80,17 @@ function SebastianApp() {
                 </button>
                 
                 <button
-                    onClick={() => goToPage('game')}
+                    onClick={() => goToPage('piano')}
                     className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-6 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
+                >
+                    <div className="text-4xl mb-2">🎹</div>
+                    <div className="text-xl">Virtual Piano</div>
+                    <div className="text-sm opacity-75">Make music with different sounds!</div>
+                </button>
+                
+                <button
+                    onClick={() => goToPage('game')}
+                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-6 px-6 rounded-xl transition-all duration-200 hover:scale-105 shadow-lg"
                 >
                     <div className="text-4xl mb-2">🎮</div>
                     <div className="text-xl">Emoji Pop Game</div>
@@ -144,6 +153,13 @@ function SebastianApp() {
                     </div>
                 )}
                 
+                {currentPage === 'piano' && (
+                    <div>
+                        <BackButton title="Piano" />
+                        <PianoTab />
+                    </div>
+                )}
+                
                 {currentPage === 'game' && (
                     <div>
                         <BackButton title="Emoji Pop" />
@@ -153,7 +169,7 @@ function SebastianApp() {
                 
                 {currentPage === 'puppy' && (
                     <div>
-                        <BackButton title="Buddy! 🐕" />
+                        <BackButton title="Buddy" />
                         <PuppyTab 
                             puppyAction={puppyAction}
                             setPuppyAction={setPuppyAction}
