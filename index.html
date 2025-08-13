@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barnabus Button App</title>
+    <title>Sebastian's Silly App</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -15,7 +15,8 @@
     <script type="text/babel">
         const { useState } = React;
 
-        function BarnabusApp() {
+        function SebastianApp() {
+            const [activeTab, setActiveTab] = useState('buttons');
             const [message, setMessage] = useState('');
             const [customText, setCustomText] = useState('Barnabus');
             const [isPlaying, setIsPlaying] = useState(false);
@@ -23,7 +24,6 @@
             const handleSpeak = () => {
                 setMessage(customText);
                 
-                // Text-to-speech functionality
                 if ('speechSynthesis' in window) {
                     setIsPlaying(true);
                     const utterance = new SpeechSynthesisUtterance(customText);
@@ -44,72 +44,281 @@
                 setIsPlaying(false);
             };
 
-            return (
-                                    <div className="flex flex-col items-center justify-center min-h-screen bg-purple-200 p-8">
-                    <div className="bg-white rounded-lg shadow-lg p-8 text-center max-w-md w-full">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-8">Text-to-Speech Button</h1>
+            const ButtonsTab = () => (
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            What should I say?
+                        </label>
+                        <input
+                            type="text"
+                            value={customText}
+                            onChange={(e) => setCustomText(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter text to speak..."
+                        />
+                    </div>
+                    
+                    <div className="space-y-3">
+                        {!isPlaying ? (
+                            <button 
+                                onClick={handleSpeak}
+                                disabled={!customText.trim()}
+                                className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full"
+                            >
+                                🔊 Speak: "{customText}"
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={stopSpeech}
+                                className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full animate-pulse"
+                            >
+                                ⏹️ Stop Speaking
+                            </button>
+                        )}
+                    </div>
+                    
+                    <div className="flex gap-2 flex-wrap justify-center">
+                        {['Barnabus', 'Poo Poo Pee Pee', 'Eat Beans With Me', 'Reeee'].map((preset) => (
+                            <button
+                                key={preset}
+                                onClick={() => setCustomText(preset)}
+                                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm transition-colors duration-200"
+                            >
+                                {preset}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    {message && (
+                        <div className="mt-6 text-2xl font-semibold text-purple-600 animate-bounce">
+                            "{message}"
+                        </div>
+                    )}
+                </div>
+            );
+
+            const DrawTab = () => {
+                const canvasRef = React.useRef(null);
+                const [isDrawing, setIsDrawing] = React.useState(false);
+                const [currentColor, setCurrentColor] = React.useState('#000000');
+
+                React.useEffect(() => {
+                    const canvas = canvasRef.current;
+                    if (canvas) {
+                        const ctx = canvas.getContext('2d');
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.lineWidth = 3;
+                    }
+                }, []);
+
+                const startDrawing = (e) => {
+                    setIsDrawing(true);
+                    const canvas = canvasRef.current;
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                };
+
+                const draw = (e) => {
+                    if (!isDrawing) return;
+                    
+                    const canvas = canvasRef.current;
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.strokeStyle = currentColor;
+                    ctx.lineTo(x, y);
+                    ctx.stroke();
+                };
+
+                const stopDrawing = () => {
+                    setIsDrawing(false);
+                };
+
+                const clearCanvas = () => {
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                };
+
+                return (
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-gray-800 text-center">Draw Something!</h3>
                         
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    What should I say?
-                                </label>
-                                <input
-                                    type="text"
-                                    value={customText}
-                                    onChange={(e) => setCustomText(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="Enter text to speak..."
+                        <div className="flex justify-center gap-2 mb-4">
+                            {['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500'].map(color => (
+                                <button
+                                    key={color}
+                                    onClick={() => setCurrentColor(color)}
+                                    className={`w-8 h-8 rounded-full border-2 ${currentColor === color ? 'border-black' : 'border-gray-300'}`}
+                                    style={{ backgroundColor: color }}
                                 />
-                            </div>
-                            
-                            <div className="space-y-3">
-                                {!isPlaying ? (
-                                    <button 
-                                        onClick={handleSpeak}
-                                        disabled={!customText.trim()}
-                                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full"
-                                    >
-                                        🔊 Speak: "{customText}"
-                                    </button>
-                                ) : (
-                                    <button 
-                                        onClick={stopSpeech}
-                                        className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full animate-pulse"
-                                    >
-                                        ⏹️ Stop Speaking
-                                    </button>
-                                )}
-                            </div>
-                            
-                            <div className="flex gap-2 flex-wrap justify-center">
-                                {['Barnabus', 'Poo Poo Pee Pee', 'Eat Beans With Me', 'Reeee'].map((preset) => (
-                                    <button
-                                        key={preset}
-                                        onClick={() => setCustomText(preset)}
-                                        className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm transition-colors duration-200"
-                                    >
-                                        {preset}
-                                    </button>
-                                ))}
-                            </div>
+                            ))}
                         </div>
                         
-                        {message && (
-                            <div className="mt-6 text-2xl font-semibold text-purple-600 animate-bounce">
-                                "{message}"
+                        <canvas
+                            ref={canvasRef}
+                            width={300}
+                            height={200}
+                            className="border-2 border-gray-300 rounded-lg mx-auto block bg-white cursor-crosshair"
+                            onMouseDown={startDrawing}
+                            onMouseMove={draw}
+                            onMouseUp={stopDrawing}
+                            onMouseLeave={stopDrawing}
+                        />
+                        
+                        <button
+                            onClick={clearCanvas}
+                            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 w-full"
+                        >
+                            🗑️ Clear Drawing
+                        </button>
+                    </div>
+                );
+            };
+
+            const GameTab = () => {
+                const [score, setScore] = React.useState(0);
+                const [timeLeft, setTimeLeft] = React.useState(30);
+                const [gameActive, setGameActive] = React.useState(false);
+                const [bubblePosition, setBubblePosition] = React.useState({ x: 50, y: 50 });
+
+                React.useEffect(() => {
+                    let interval;
+                    if (gameActive && timeLeft > 0) {
+                        interval = setInterval(() => {
+                            setTimeLeft(time => time - 1);
+                        }, 1000);
+                    } else if (timeLeft === 0) {
+                        setGameActive(false);
+                    }
+                    return () => clearInterval(interval);
+                }, [gameActive, timeLeft]);
+
+                const startGame = () => {
+                    setScore(0);
+                    setTimeLeft(30);
+                    setGameActive(true);
+                    moveBubble();
+                };
+
+                const moveBubble = () => {
+                    setBubblePosition({
+                        x: Math.random() * 80 + 10,
+                        y: Math.random() * 60 + 20
+                    });
+                };
+
+                const popBubble = () => {
+                    if (gameActive) {
+                        setScore(score + 1);
+                        moveBubble();
+                    }
+                };
+
+                return (
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-bold text-gray-800 text-center">Pop the Bubble!</h3>
+                        
+                        <div className="flex justify-between text-lg font-semibold">
+                            <span>Score: {score}</span>
+                            <span>Time: {timeLeft}s</span>
+                        </div>
+                        
+                        {!gameActive ? (
+                            <button
+                                onClick={startGame}
+                                className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 w-full"
+                            >
+                                🎮 Start Game
+                            </button>
+                        ) : (
+                            <div 
+                                className="relative bg-blue-100 rounded-lg mx-auto"
+                                style={{ width: '300px', height: '200px' }}
+                            >
+                                <div
+                                    onClick={popBubble}
+                                    className="absolute w-12 h-12 bg-pink-400 rounded-full cursor-pointer hover:bg-pink-500 transition-colors duration-200 flex items-center justify-center text-2xl animate-pulse"
+                                    style={{ 
+                                        left: `${bubblePosition.x}%`, 
+                                        top: `${bubblePosition.y}%`,
+                                        transform: 'translate(-50%, -50%)'
+                                    }}
+                                >
+                                    🫧
+                                </div>
                             </div>
                         )}
                         
+                        {timeLeft === 0 && (
+                            <div className="text-center text-xl font-bold text-purple-600">
+                                Game Over! Final Score: {score}
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-purple-200 p-8">
+                    <div className="bg-white rounded-lg shadow-lg p-8 text-center max-w-md w-full">
+                        <h1 className="text-3xl font-bold text-gray-800 mb-6">Sebastian's Silly App</h1>
+                        
+                        <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+                            <button
+                                onClick={() => setActiveTab('buttons')}
+                                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors duration-200 ${
+                                    activeTab === 'buttons' 
+                                        ? 'bg-blue-500 text-white' 
+                                        : 'text-gray-700 hover:text-blue-500'
+                                }`}
+                            >
+                                🔊 Buttons
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('draw')}
+                                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors duration-200 ${
+                                    activeTab === 'draw' 
+                                        ? 'bg-blue-500 text-white' 
+                                        : 'text-gray-700 hover:text-blue-500'
+                                }`}
+                            >
+                                🎨 Draw
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('game')}
+                                className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors duration-200 ${
+                                    activeTab === 'game' 
+                                        ? 'bg-blue-500 text-white' 
+                                        : 't'
+                                }`}
+                            >
+                                🎮 Game
+                            </button>
+                        </div>
+
+                        {activeTab === 'buttons' && <ButtonsTab />}
+                        {activeTab === 'draw' && <DrawTab />}
+                        {activeTab === 'game' && <GameTab />}
+                        
                         <div className="mt-6 text-xs text-gray-500">
-                            Uses your browser's built-in text-to-speech
+                            Made for Sebastian! 🎉
                         </div>
                     </div>
                 </div>
             );
         }
 
-        ReactDOM.render(<BarnabusApp />, document.getElementById('root'));
+        ReactDOM.render(<SebastianApp />, document.getElementById('root'));
     </script>
 </body>
 </html>
