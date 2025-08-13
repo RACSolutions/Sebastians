@@ -146,14 +146,14 @@ function SebastianApp() {
                 
                 {currentPage === 'game' && (
                     <div>
-                        <BackButton title="Emoji Pop Game" />
+                        <BackButton title="Emoji Pop" />
                         <GameTab />
                     </div>
                 )}
                 
                 {currentPage === 'puppy' && (
                     <div>
-                        <BackButton title="Play with Buddy" />
+                        <BackButton title="Buddy! 🐕" />
                         <PuppyTab 
                             puppyAction={puppyAction}
                             setPuppyAction={setPuppyAction}

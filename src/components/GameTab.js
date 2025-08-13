@@ -135,7 +135,7 @@ const GameTab = () => {
 
     return (
         <div className="space-y-4">
-            <h3 className="text-xl font-bold text-gray-800 text-center">Emoji Pop!</h3>
+            <h3 className="text-xl font-bold text-gray-800 text-center">Emoji Pop Game!</h3>
             
             <div className="flex justify-between text-lg font-semibold">
                 <span>Score: {score}</span>
