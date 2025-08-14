@@ -15,11 +15,12 @@ const SpaceTab = () => {
     const [popupPlanet, setPopupPlanet] = React.useState(null);
     const [showAstronautPopup, setShowAstronautPopup] = React.useState(false);
 
-    // Planet data with fun facts for kids - Updated with better visual representations
+    // Planet data with fun facts for kids - Updated with custom images
     const planets = [
         {
             name: 'Sun',
-            icon: '🌞', // Better sun representation
+            icon: '🌞', // Fallback if image doesn't load
+            backgroundImage: 'url("src/images/sun.png")',
             color: 'from-yellow-300 via-orange-400 to-red-500',
             size: 'w-16 h-16',
             position: { x: 50, y: 50 },
@@ -37,7 +38,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Mercury',
-            icon: '🌑', // Dark, cratered appearance
+            icon: '🌑',
+            backgroundImage: 'url("src/images/mercury.png")',
             color: 'from-gray-300 via-gray-500 to-gray-700',
             size: 'w-6 h-6',
             position: { x: 35, y: 45 },
@@ -54,7 +56,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Venus',
-            icon: '🟡', // Bright yellow/orange for thick atmosphere
+            icon: '🟡',
+            backgroundImage: 'url("src/images/venus.png")',
             color: 'from-yellow-200 via-orange-300 to-yellow-400',
             size: 'w-8 h-8',
             position: { x: 25, y: 60 },
@@ -71,7 +74,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Earth',
-            icon: '🌍', // Earth with continents visible
+            icon: '🌍',
+            backgroundImage: 'url("src/images/earth.png")',
             color: 'from-blue-400 via-green-400 to-blue-500',
             size: 'w-9 h-9',
             position: { x: 20, y: 35 },
@@ -88,7 +92,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Mars',
-            icon: '🔴', // Red planet
+            icon: '🔴',
+            backgroundImage: 'url("src/images/mars.png")',
             color: 'from-red-400 via-red-600 to-orange-600',
             size: 'w-7 h-7',
             position: { x: 15, y: 20 },
@@ -105,7 +110,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Jupiter',
-            icon: '🟠', // Large orange/brown with bands
+            icon: '🟠',
+            backgroundImage: 'url("src/images/jupiter.png")',
             color: 'from-orange-300 via-yellow-500 to-orange-600',
             size: 'w-14 h-14',
             position: { x: 75, y: 25 },
@@ -123,7 +129,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Saturn',
-            icon: '🪐', // Perfect - already shows rings
+            icon: '🪐',
+            backgroundImage: 'url("src/images/saturn.png")',
             color: 'from-yellow-200 via-amber-300 to-yellow-400',
             size: 'w-12 h-12',
             position: { x: 80, y: 65 },
@@ -141,7 +148,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Uranus',
-            icon: '🔵', // Ice blue color
+            icon: '🔵',
+            backgroundImage: 'url("src/images/uranus.png")',
             color: 'from-cyan-300 via-blue-400 to-teal-400',
             size: 'w-10 h-10',
             position: { x: 85, y: 40 },
@@ -158,7 +166,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Neptune',
-            icon: '🔷', // Deep blue diamond shape for the deep blue planet
+            icon: '🔷',
+            backgroundImage: 'url("src/images/neptune.png")',
             color: 'from-blue-600 via-blue-700 to-indigo-800',
             size: 'w-10 h-10',
             position: { x: 90, y: 55 },
@@ -373,8 +382,35 @@ const SpaceTab = () => {
                             }}
                             onClick={() => handlePlanetClick(planet)}
                         >
-                            <div className={`${mobileSize} bg-gradient-to-br ${planet.color} rounded-full shadow-lg border-2 border-white/30 flex items-center justify-center text-white font-bold relative overflow-hidden ${planet.glowEffect ? 'shadow-yellow-400/50' : ''} ${planet.hasRings ? 'ring-2 ring-yellow-300/40 ring-offset-2 ring-offset-transparent' : ''}`}>
-                                <span className="text-sm sm:text-lg">{planet.icon}</span>
+                            <div 
+                                className={`${mobileSize} rounded-full shadow-lg border-2 border-white/30 flex items-center justify-center relative overflow-hidden ${planet.glowEffect ? 'shadow-yellow-400/50' : ''} ${planet.hasRings ? 'ring-2 ring-yellow-300/40 ring-offset-2 ring-offset-transparent' : ''}`}
+                                style={{
+                                    backgroundImage: planet.backgroundImage,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat',
+                                    backgroundColor: 'transparent'
+                                }}
+                            >
+                                {/* Only show emoji if background image fails to load */}
+                                <img 
+                                    src={planet.backgroundImage.replace('url("', '').replace('")', '')}
+                                    alt={planet.name}
+                                    className="w-full h-full object-cover rounded-full"
+                                    onError={(e) => {
+                                        // Hide the img and show fallback
+                                        e.target.style.display = 'none';
+                                        e.target.nextSibling.style.display = 'block';
+                                    }}
+                                    onLoad={(e) => {
+                                        // Hide the fallback emoji when image loads successfully
+                                        e.target.nextSibling.style.display = 'none';
+                                    }}
+                                />
+                                {/* Fallback emoji */}
+                                <span className={`text-sm sm:text-lg absolute inset-0 flex items-center justify-center text-white font-bold bg-gradient-to-br ${planet.color} rounded-full`} style={{ display: 'none' }}>
+                                    {planet.icon}
+                                </span>
                                 
                                 {/* Planet name tooltip - hidden on mobile */}
                                 <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap hidden sm:block">
@@ -566,11 +602,21 @@ const SpaceTab = () => {
             {selectedPlanet && (
                 <>
                     {/* Planet Header */}
-                    <div className={`bg-gradient-to-br ${selectedPlanet.color} rounded-2xl p-6 text-white text-center shadow-lg`}>
-                        <div className="text-6xl mb-3">{selectedPlanet.icon}</div>
-                        <h2 className="text-3xl font-bold mb-2">{selectedPlanet.name}</h2>
-                        <div className="bg-white bg-opacity-20 rounded-lg p-3">
-                            <div className="text-lg">{selectedPlanet.funFact}</div>
+                    <div 
+                        className={`bg-gradient-to-br ${selectedPlanet.color} rounded-2xl p-6 text-white text-center shadow-lg relative overflow-hidden`}
+                        style={{
+                            backgroundImage: selectedPlanet.backgroundImage,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            backgroundBlendMode: 'overlay'
+                        }}
+                    >
+                        <div className="relative z-10">
+                            <div className="text-6xl mb-3">{selectedPlanet.icon}</div>
+                            <h2 className="text-3xl font-bold mb-2">{selectedPlanet.name}</h2>
+                            <div className="bg-white bg-opacity-20 rounded-lg p-3">
+                                <div className="text-lg">{selectedPlanet.funFact}</div>
+                            </div>
                         </div>
                     </div>
 
