@@ -15,8 +15,15 @@ const CodingTab = () => {
     const [isRunning, setIsRunning] = React.useState(false);
     const [gameGrid, setGameGrid] = React.useState([]);
 
+    // Touch/Mobile drag state
+    const [isDragging, setIsDragging] = React.useState(false);
+    const [draggedElement, setDraggedElement] = React.useState(null);
+    const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
+    const [touchStartPos, setTouchStartPos] = React.useState({ x: 0, y: 0 });
+
     // Coding lessons for kids
     const lessons = [
+        // Easy Songs First
         {
             id: 'first-steps',
             title: '👶 First Steps',
@@ -226,19 +233,99 @@ const CodingTab = () => {
         setIsRunning(false);
     };
 
-    // Drag and Drop handlers
+    // Enhanced Drag and Drop handlers with touch support
     const handleDragStart = (e, block) => {
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'copy';
+        }
         setDraggedBlock(block);
-        e.dataTransfer.effectAllowed = 'copy';
+    };
+
+    const handleTouchStart = (e, block) => {
+        // Don't call preventDefault here - let React handle it
+        const touch = e.touches[0];
+        setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+        setDraggedBlock(block);
+        
+        // Create a visual drag element for mobile after a small delay
+        setTimeout(() => {
+            setIsDragging(true);
+            createDragElement(block, touch.clientX, touch.clientY);
+        }, 150);
+    };
+
+    const createDragElement = (block, x, y) => {
+        // Remove any existing drag elements
+        const existingDrag = document.querySelector('.mobile-drag-element');
+        if (existingDrag) {
+            existingDrag.remove();
+        }
+
+        const dragElement = document.createElement('div');
+        dragElement.className = `mobile-drag-element ${block.color} text-white px-3 py-2 rounded-lg text-sm font-bold pointer-events-none fixed z-50 transform -translate-x-1/2 -translate-y-1/2 shadow-lg border-2 border-white`;
+        dragElement.style.left = x + 'px';
+        dragElement.style.top = y + 'px';
+        dragElement.innerText = block.label;
+        
+        document.body.appendChild(dragElement);
+        setDraggedElement(dragElement);
+    };
+
+    const handleTouchMove = (e) => {
+        if (!isDragging || !draggedElement) return;
+        
+        // Don't call preventDefault - just update position
+        const touch = e.touches[0];
+        
+        if (draggedElement) {
+            draggedElement.style.left = touch.clientX + 'px';
+            draggedElement.style.top = touch.clientY + 'px';
+        }
+    };
+
+    const handleTouchEnd = (e) => {
+        if (!isDragging) return;
+        
+        // Don't call preventDefault
+        const touch = e.changedTouches[0];
+        
+        // Find the element at the touch position
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        
+        // Check if we're dropping on a valid drop zone
+        const dropZone = elementBelow?.closest('[data-drop-zone]');
+        if (dropZone) {
+            const parentId = dropZone.getAttribute('data-parent-id');
+            const index = dropZone.getAttribute('data-index');
+            handleDrop(null, index ? parseInt(index) : null, parentId);
+        }
+        
+        // Clean up
+        cleanupDrag();
+    };
+
+    const cleanupDrag = () => {
+        setIsDragging(false);
+        setDraggedBlock(null);
+        
+        if (draggedElement) {
+            draggedElement.remove();
+            setDraggedElement(null);
+        }
     };
 
     const handleDragOver = (e) => {
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = 'copy';
+        }
     };
 
     const handleDrop = (e, index = null, parentId = null) => {
-        e.preventDefault();
+        if (e) {
+            e.preventDefault();
+        }
+        
         if (draggedBlock) {
             const newBlock = { 
                 ...draggedBlock, 
@@ -267,7 +354,8 @@ const CodingTab = () => {
                 setCodeBlocks(prev => [...prev, newBlock]);
             }
         }
-        setDraggedBlock(null);
+        
+        cleanupDrag();
     };
 
     const removeBlock = (index, parentId = null) => {
@@ -476,6 +564,7 @@ const CodingTab = () => {
                                             : 'bg-gradient-to-r from-green-400 to-emerald-500 text-white'
                                         : 'bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white'
                                 }`}
+                                style={{ touchAction: 'manipulation' }}
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
@@ -530,151 +619,6 @@ const CodingTab = () => {
                     </div>
                 </div>
                 
-                {/* What's Next section */}
-                {allCompleted && (
-                    <div className="space-y-4">
-                        {/* Fun Videos Section */}
-                        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                            <div className="text-center mb-3">
-                                <div className="text-lg font-bold text-red-800 mb-2">🎬 Fun Coding Videos</div>
-                                <div className="text-sm text-red-700 mb-3">Watch these amazing videos to learn more!</div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-2 text-sm">
-                                <a href="https://www.youtube.com/watch?v=Ok6LbV6bqaE" target="_blank" rel="noopener noreferrer" 
-                                   className="bg-white rounded-lg p-3 hover:bg-red-100 transition-colors duration-200 text-left">
-                                    <div className="font-semibold text-red-800">📺 "What is Coding?" by Code.org</div>
-                                    <div className="text-red-600 text-xs">Fun explanation for kids!</div>
-                                </a>
-                                <a href="https://www.youtube.com/watch?v=cDA3_5982h8" target="_blank" rel="noopener noreferrer"
-                                   className="bg-white rounded-lg p-3 hover:bg-red-100 transition-colors duration-200 text-left">
-                                    <div className="font-semibold text-red-800">🎯 "Coding for Kids" by Crash Course Kids</div>
-                                    <div className="text-red-600 text-xs">Easy to understand basics</div>
-                                </a>
-                                <a href="https://www.youtube.com/watch?v=jjqgP9dpD1k" target="_blank" rel="noopener noreferrer"
-                                   className="bg-white rounded-lg p-3 hover:bg-red-100 transition-colors duration-200 text-left">
-                                    <div className="font-semibold text-red-800">🤖 "How Do Computers Work?" by SciShow Kids</div>
-                                    <div className="text-red-600 text-xs">Learn about computers!</div>
-                                </a>
-                            </div>
-                        </div>
-
-                        {/* Interactive Websites */}
-                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                            <div className="text-center mb-3">
-                                <div className="text-lg font-bold text-green-800 mb-2">🌐 Cool Coding Websites</div>
-                                <div className="text-sm text-green-700 mb-3">Ask a grown-up to help you visit these!</div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-2 text-sm">
-                                <div className="bg-white rounded-lg p-3 text-left">
-                                    <div className="font-semibold text-green-800">🎨 Scratch Jr (ScratchJr.org)</div>
-                                    <div className="text-green-600 text-xs">Perfect for tablets - drag blocks like here!</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-3 text-left">
-                                    <div className="font-semibold text-green-800">🏴‍☠️ Code.org (Hour of Code)</div>
-                                    <div className="text-green-600 text-xs">Minecraft, Star Wars, and Disney coding!</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-3 text-left">
-                                    <div className="font-semibold text-green-800">🎮 Kodable.com</div>
-                                    <div className="text-green-600 text-xs">Fun games that teach programming</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-3 text-left">
-                                    <div className="font-semibold text-green-800">🐛 Lightbot.com</div>
-                                    <div className="text-green-600 text-xs">Puzzle game with programming logic</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Apps for Tablets */}
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                            <div className="text-center mb-3">
-                                <div className="text-lg font-bold text-blue-800 mb-2">📱 Awesome Coding Apps</div>
-                                <div className="text-sm text-blue-700 mb-3">Download these apps on your tablet!</div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="bg-white rounded-lg p-2 text-center">
-                                    <div className="text-lg mb-1">🎨</div>
-                                    <div className="font-semibold text-blue-800">Scratch Jr</div>
-                                    <div className="text-blue-600">Ages 5-7</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-2 text-center">
-                                    <div className="text-lg mb-1">🤖</div>
-                                    <div className="font-semibold text-blue-800">Kodable</div>
-                                    <div className="text-blue-600">Ages 5+</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-2 text-center">
-                                    <div className="text-lg mb-1">🐛</div>
-                                    <div className="font-semibold text-blue-800">Lightbot Jr</div>
-                                    <div className="text-blue-600">Ages 4-8</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-2 text-center">
-                                    <div className="text-lg mb-1">🏗️</div>
-                                    <div className="font-semibold text-blue-800">Toca Builders</div>
-                                    <div className="text-blue-600">Creative</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Books & Physical Activities */}
-                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                            <div className="text-center mb-3">
-                                <div className="text-lg font-bold text-purple-800 mb-2">📚 Fun Coding Books & Activities</div>
-                                <div className="text-sm text-purple-700 mb-3">Ask at your library or bookstore!</div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-2 text-sm">
-                                <div className="bg-white rounded-lg p-2">
-                                    <div className="font-semibold text-purple-800">📖 "Hello Ruby" by Linda Liukas</div>
-                                    <div className="text-purple-600 text-xs">Adventures in coding (no computer needed!)</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-2">
-                                    <div className="font-semibold text-purple-800">🎲 Robot Turtles Board Game</div>
-                                    <div className="text-purple-600 text-xs">Programming concepts as a board game</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-2">
-                                    <div className="font-semibold text-purple-800">🏃 "Human Programming" Activities</div>
-                                    <div className="text-purple-600 text-xs">Give step-by-step instructions to family!</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Special Activities */}
-                        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                            <div className="text-center mb-3">
-                                <div className="text-lg font-bold text-yellow-800 mb-2">🎪 Fun Coding Activities</div>
-                                <div className="text-sm text-yellow-700 mb-3">Try these with family and friends!</div>
-                            </div>
-                            <div className="space-y-2 text-sm">
-                                <div className="bg-white rounded-lg p-3">
-                                    <div className="font-semibold text-yellow-800">🥪 Make a Sandwich Algorithm</div>
-                                    <div className="text-yellow-600 text-xs">Write exact steps to make a peanut butter sandwich - be super specific!</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-3">
-                                    <div className="font-semibold text-yellow-800">🎵 Dance Programming</div>
-                                    <div className="text-yellow-600 text-xs">Create dance moves using "repeat," "if," and "then" commands!</div>
-                                </div>
-                                <div className="bg-white rounded-lg p-3">
-                                    <div className="font-semibold text-yellow-800">🏠 Treasure Hunt Coding</div>
-                                    <div className="text-yellow-600 text-xs">Write step-by-step directions to hidden treasures around your house!</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                
-                {/* Simple next steps for incomplete */}
-                {!allCompleted && (
-                    <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                        <div className="text-center">
-                            <div className="text-lg font-bold text-purple-800 mb-2">🚀 What's Next?</div>
-                            <div className="text-sm text-purple-700 space-y-1">
-                                <div>• Complete all lessons to unlock resources!</div>
-                                <div>• Try Scratch Jr on a tablet</div>
-                                <div>• Ask a grown-up about coding videos</div>
-                                <div>• Practice these lessons again anytime!</div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                
                 <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                     <p className="text-xs text-yellow-800 text-center">
                         <strong>🚀 How it works:</strong> Drag and drop code blocks to make the robot move and solve puzzles!
@@ -687,12 +631,13 @@ const CodingTab = () => {
     const lesson = lessons.find(l => l.id === currentLesson);
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4" style={{ touchAction: 'pan-y' }}>
             {/* Header */}
             <div className="flex items-center justify-between">
                 <button
                     onClick={goBackToMenu}
                     className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                    style={{ touchAction: 'manipulation' }}
                 >
                     ← Back
                 </button>
@@ -745,7 +690,9 @@ const CodingTab = () => {
                             key={block.id}
                             draggable
                             onDragStart={(e) => handleDragStart(e, block)}
-                            className={`${block.color} text-white px-3 py-2 rounded-lg cursor-move text-sm font-bold hover:scale-105 transition-transform duration-200 select-none`}
+                            onTouchStart={(e) => handleTouchStart(e, block)}
+                            className={`${block.color} text-white px-3 py-2 rounded-lg cursor-move text-sm font-bold hover:scale-105 transition-transform duration-200 select-none active:scale-95`}
+                            style={{ touchAction: 'pan-y', userSelect: 'none' }}
                         >
                             {block.label}
                         </div>
@@ -760,6 +707,10 @@ const CodingTab = () => {
                     className="min-h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-3 space-y-2"
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    data-drop-zone="true"
+                    style={{ touchAction: 'pan-y' }}
                 >
                     {codeBlocks.length === 0 ? (
                         <div className="text-gray-500 text-center text-sm">
@@ -775,6 +726,7 @@ const CodingTab = () => {
                                             <button
                                                 onClick={() => removeBlock(index)}
                                                 className="bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs ml-2"
+                                                style={{ touchAction: 'manipulation' }}
                                             >
                                                 ×
                                             </button>
@@ -789,6 +741,11 @@ const CodingTab = () => {
                                                     e.stopPropagation();
                                                     handleDrop(e, null, block.id);
                                                 }}
+                                                onTouchMove={handleTouchMove}
+                                                onTouchEnd={handleTouchEnd}
+                                                data-drop-zone="true"
+                                                data-parent-id={block.id}
+                                                style={{ touchAction: 'pan-y' }}
                                             >
                                                 {block.children && block.children.length > 0 ? (
                                                     <div className="space-y-1">
@@ -798,6 +755,7 @@ const CodingTab = () => {
                                                                 <button
                                                                     onClick={() => removeBlock(childIndex, block.id)}
                                                                     className="bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs"
+                                                                    style={{ touchAction: 'manipulation' }}
                                                                 >
                                                                     ×
                                                                 </button>
@@ -825,12 +783,14 @@ const CodingTab = () => {
                     onClick={runCode}
                     disabled={isRunning || codeBlocks.length === 0}
                     className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
+                    style={{ touchAction: 'manipulation' }}
                 >
                     {isRunning ? '🏃 Running...' : '▶️ Run Code'}
                 </button>
                 <button
                     onClick={() => setCodeBlocks([])}
                     className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
+                    style={{ touchAction: 'manipulation' }}
                 >
                     🗑️ Clear
                 </button>
@@ -869,6 +829,7 @@ const CodingTab = () => {
                                     goBackToMenu();
                                 }}
                                 className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+                                style={{ touchAction: 'manipulation' }}
                             >
                                 📚 Back to Lessons
                             </button>
@@ -884,6 +845,7 @@ const CodingTab = () => {
                                             selectLesson(nextLesson.id);
                                         }}
                                         className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+                                        style={{ touchAction: 'manipulation' }}
                                     >
                                         ➡️ Next: {nextLesson.title}
                                     </button>
@@ -898,6 +860,7 @@ const CodingTab = () => {
                                                 goBackToMenu();
                                             }}
                                             className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+                                            style={{ touchAction: 'manipulation' }}
                                         >
                                             🎓 View My Achievements
                                         </button>

@@ -21,11 +21,11 @@ function SebastianApp() {
 
     // App categories with their respective pages
     const appCategories = {
-        all: ['buttons', 'draw', 'piano', 'story', 'memory', 'game', 'journal', 'weather', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz', 'riddles', 'coding'],
+        all: ['buttons', 'draw', 'piano', 'story', 'memory', 'game', 'journal', 'weather', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz', 'riddles', 'coding', 'space'],
         games: ['memory', 'game', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz'],
         creative: ['draw', 'piano', 'story', 'journal'],
         tools: ['weather', 'buttons', 'coding'],
-        learning: ['coding', 'quiz', 'story'],
+        learning: ['coding', 'quiz', 'space', 'story'],
         fun: ['buttons', 'piano', 'story', 'game', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz']
     };
 
@@ -45,7 +45,8 @@ function SebastianApp() {
         tictactoe: { title: 'Tic Tac Toe', emoji: '⭕', description: 'Classic X\'s and O\'s game!', category: 'games', gradient: 'from-indigo-400 to-blue-600', status: 'development' },
         simon: { title: 'Simon Says', emoji: '🔴', description: 'Remember the color sequence!', category: 'games', gradient: 'from-rose-400 to-pink-600', status: 'development' },
         quiz: { title: 'Fun Quiz', emoji: '❓', description: 'Test your knowledge with fun questions!', category: 'games', gradient: 'from-violet-400 to-purple-600', status: 'development' },
-        coding: { title: 'Learn to Code', emoji: '💻', description: 'Drag and drop blocks to code!', category: 'learning', gradient: 'from-emerald-400 to-teal-600', status: 'development' }
+        coding: { title: 'Learn to Code', emoji: '💻', description: 'Drag and drop blocks to code!', category: 'learning', gradient: 'from-emerald-400 to-teal-600', status: 'development' },
+        space: { title: 'Space Explorer', emoji: '🚀', description: 'Explore planets and learn about space!', category: 'tools', gradient: 'from-indigo-400 to-purple-600', status: 'development' }
     };
 
     // Filter categories
@@ -483,6 +484,13 @@ function SebastianApp() {
                     <div>
                         <BackButton title="Learn to Code" />
                         <CodingTab />
+                    </div>
+                )}
+
+                {currentPage === 'space' && (  
+                    <div>
+                        <BackButton title="Space Explorer" />
+                        <SpaceTab />
                     </div>
                 )}
             </div>
