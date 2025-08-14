@@ -276,6 +276,15 @@ function SebastianApp() {
                 <h1 className="text-4xl font-bold text-gray-800 mb-2">✨ {userName}'s Fun App! ✨</h1>
                 <p className="text-gray-600">Choose what you want to do!</p>
             </div>
+            <div className="bg-pink-100 border-l-4 border-pink-500 text-pink-700 p-4 mb-6 rounded-lg">
+            <div className="flex items-center">
+                <div className="text-2xl mr-3">💌</div>
+                <div>
+                    <p className="font-medium">Hi Sebastian!</p>
+                    <p className="text-sm">I have fixed the Learn to Code App so you can now click on the instruction ("move right") and it will work. Love, Mum x</p>
+                </div>
+            </div>
+        </div>
             
             {/* Filter Buttons */}
             <div className="flex flex-wrap gap-2 justify-center mb-6">
@@ -293,6 +302,7 @@ function SebastianApp() {
                     </button>
                 ))}
             </div>
+
             
             {/* Filtered Apps Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
