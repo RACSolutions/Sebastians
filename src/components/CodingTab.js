@@ -7,19 +7,12 @@ const CodingTab = () => {
     });
     const [showCelebration, setShowCelebration] = React.useState(false);
     
-    // Drag and Drop state
-    const [draggedBlock, setDraggedBlock] = React.useState(null);
+    // Drag and Drop state - simplified to click-to-add
     const [codeBlocks, setCodeBlocks] = React.useState([]);
     const [robotPosition, setRobotPosition] = React.useState({ x: 0, y: 0 });
     const [robotDirection, setRobotDirection] = React.useState('right');
     const [isRunning, setIsRunning] = React.useState(false);
     const [gameGrid, setGameGrid] = React.useState([]);
-
-    // Touch/Mobile drag state
-    const [isDragging, setIsDragging] = React.useState(false);
-    const [draggedElement, setDraggedElement] = React.useState(null);
-    const [dragOffset, setDragOffset] = React.useState({ x: 0, y: 0 });
-    const [touchStartPos, setTouchStartPos] = React.useState({ x: 0, y: 0 });
 
     // Coding lessons for kids
     const lessons = [
@@ -233,129 +226,36 @@ const CodingTab = () => {
         setIsRunning(false);
     };
 
-    // Enhanced Drag and Drop handlers with touch support
-    const handleDragStart = (e, block) => {
-        if (e.dataTransfer) {
-            e.dataTransfer.effectAllowed = 'copy';
-        }
-        setDraggedBlock(block);
-    };
-
-    const handleTouchStart = (e, block) => {
-        // Don't call preventDefault here - let React handle it
-        const touch = e.touches[0];
-        setTouchStartPos({ x: touch.clientX, y: touch.clientY });
-        setDraggedBlock(block);
+    // Click to add block functionality
+    const addBlock = (block) => {
+        const newBlock = { 
+            ...block, 
+            id: `${block.id}-${Date.now()}`,
+            children: block.container ? [] : undefined
+        };
         
-        // Create a visual drag element for mobile after a small delay
-        setTimeout(() => {
-            setIsDragging(true);
-            createDragElement(block, touch.clientX, touch.clientY);
-        }, 150);
-    };
-
-    const createDragElement = (block, x, y) => {
-        // Remove any existing drag elements
-        const existingDrag = document.querySelector('.mobile-drag-element');
-        if (existingDrag) {
-            existingDrag.remove();
-        }
-
-        const dragElement = document.createElement('div');
-        dragElement.className = `mobile-drag-element ${block.color} text-white px-3 py-2 rounded-lg text-sm font-bold pointer-events-none fixed z-50 transform -translate-x-1/2 -translate-y-1/2 shadow-lg border-2 border-white`;
-        dragElement.style.left = x + 'px';
-        dragElement.style.top = y + 'px';
-        dragElement.innerText = block.label;
-        
-        document.body.appendChild(dragElement);
-        setDraggedElement(dragElement);
-    };
-
-    const handleTouchMove = (e) => {
-        if (!isDragging || !draggedElement) return;
-        
-        // Don't call preventDefault - just update position
-        const touch = e.touches[0];
-        
-        if (draggedElement) {
-            draggedElement.style.left = touch.clientX + 'px';
-            draggedElement.style.top = touch.clientY + 'px';
-        }
-    };
-
-    const handleTouchEnd = (e) => {
-        if (!isDragging) return;
-        
-        // Don't call preventDefault
-        const touch = e.changedTouches[0];
-        
-        // Find the element at the touch position
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        
-        // Check if we're dropping on a valid drop zone
-        const dropZone = elementBelow?.closest('[data-drop-zone]');
-        if (dropZone) {
-            const parentId = dropZone.getAttribute('data-parent-id');
-            const index = dropZone.getAttribute('data-index');
-            handleDrop(null, index ? parseInt(index) : null, parentId);
+        // Check if we have an open repeat container (last block that's a container with no children)
+        const lastBlock = codeBlocks[codeBlocks.length - 1];
+        if (lastBlock && lastBlock.container && !block.container && (!lastBlock.children || lastBlock.children.length === 0)) {
+            // Add to the last container block (only 1 block per repeat)
+            setCodeBlocks(prev => prev.map((parentBlock, index) => {
+                if (index === prev.length - 1 && parentBlock.container) {
+                    return {
+                        ...parentBlock,
+                        children: [newBlock] // Only one block in repeat
+                    };
+                }
+                return parentBlock;
+            }));
+        } else {
+            // Add to main sequence
+            setCodeBlocks(prev => [...prev, newBlock]);
         }
         
-        // Clean up
-        cleanupDrag();
-    };
-
-    const cleanupDrag = () => {
-        setIsDragging(false);
-        setDraggedBlock(null);
-        
-        if (draggedElement) {
-            draggedElement.remove();
-            setDraggedElement(null);
+        // Play a little sound effect
+        if (window.playPopSound) {
+            window.playPopSound();
         }
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        if (e.dataTransfer) {
-            e.dataTransfer.dropEffect = 'copy';
-        }
-    };
-
-    const handleDrop = (e, index = null, parentId = null) => {
-        if (e) {
-            e.preventDefault();
-        }
-        
-        if (draggedBlock) {
-            const newBlock = { 
-                ...draggedBlock, 
-                id: `${draggedBlock.id}-${Date.now()}`,
-                children: draggedBlock.container ? [] : undefined
-            };
-            
-            if (parentId) {
-                // Adding to a container block
-                setCodeBlocks(prev => prev.map(block => {
-                    if (block.id === parentId && block.container) {
-                        return {
-                            ...block,
-                            children: [...(block.children || []), newBlock]
-                        };
-                    }
-                    return block;
-                }));
-            } else if (index !== null) {
-                // Insert at specific position
-                const newBlocks = [...codeBlocks];
-                newBlocks.splice(index, 0, newBlock);
-                setCodeBlocks(newBlocks);
-            } else {
-                // Add to end
-                setCodeBlocks(prev => [...prev, newBlock]);
-            }
-        }
-        
-        cleanupDrag();
     };
 
     const removeBlock = (index, parentId = null) => {
@@ -631,7 +531,7 @@ const CodingTab = () => {
     const lesson = lessons.find(l => l.id === currentLesson);
 
     return (
-        <div className="space-y-4" style={{ touchAction: 'pan-y' }}>
+        <div className="space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <button
@@ -683,50 +583,55 @@ const CodingTab = () => {
 
             {/* Available Blocks */}
             <div className="space-y-2">
-                <h4 className="text-sm font-bold text-gray-700">📦 Drag these blocks:</h4>
+                <h4 className="text-sm font-bold text-gray-700">📦 Tap blocks to add to your code:</h4>
                 <div className="flex flex-wrap gap-2">
                     {lesson.availableBlocks.map((block) => (
-                        <div
+                        <button
                             key={block.id}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, block)}
-                            onTouchStart={(e) => handleTouchStart(e, block)}
-                            className={`${block.color} text-white px-3 py-2 rounded-lg cursor-move text-sm font-bold hover:scale-105 transition-transform duration-200 select-none active:scale-95`}
-                            style={{ touchAction: 'pan-y', userSelect: 'none' }}
+                            onClick={() => addBlock(block)}
+                            className={`${block.color} text-white px-3 py-2 rounded-lg text-sm font-bold hover:scale-105 transition-transform duration-200 select-none active:scale-95 cursor-pointer hover:brightness-110`}
+                            style={{ touchAction: 'manipulation' }}
                         >
                             {block.label}
-                        </div>
+                        </button>
                     ))}
+                </div>
+                
+                {/* Smart tip based on current state */}
+                <div className="text-xs text-gray-500 text-center">
+                    {(() => {
+                        const lastBlock = codeBlocks[codeBlocks.length - 1];
+                        if (lastBlock && lastBlock.container && (!lastBlock.children || lastBlock.children.length === 0)) {
+                            return `💡 Next block will be repeated ${lastBlock.count} times inside "${lastBlock.label}"`;
+                        }
+                        return '💡 Tip: Click any block above to add it to your code below!';
+                    })()}
                 </div>
             </div>
 
             {/* Code Area */}
             <div className="space-y-2">
                 <h4 className="text-sm font-bold text-gray-700">🔧 Your Code:</h4>
-                <div 
-                    className="min-h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-3 space-y-2"
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e)}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                    data-drop-zone="true"
-                    style={{ touchAction: 'pan-y' }}
-                >
+                <div className="min-h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg p-3 space-y-2">
                     {codeBlocks.length === 0 ? (
                         <div className="text-gray-500 text-center text-sm">
-                            Drop code blocks here to build your program! 👆
+                            Click blocks above to build your program! 👆
                         </div>
                     ) : (
                         codeBlocks.map((block, index) => (
                             <div key={block.id} className="space-y-2">
                                 <div className="flex items-center gap-2">
+                                    <div className="flex items-center text-gray-600 text-sm font-bold min-w-6">
+                                        {index + 1}.
+                                    </div>
                                     <div className={`${block.color} text-white px-3 py-2 rounded-lg text-sm font-bold flex-grow`}>
                                         <div className="flex items-center justify-between">
                                             <span>{block.label}</span>
                                             <button
                                                 onClick={() => removeBlock(index)}
-                                                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs ml-2"
+                                                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs ml-2 hover:scale-110 transition-transform duration-200"
                                                 style={{ touchAction: 'manipulation' }}
+                                                title="Remove this block"
                                             >
                                                 ×
                                             </button>
@@ -734,37 +639,30 @@ const CodingTab = () => {
                                         
                                         {/* Container for child blocks */}
                                         {block.container && (
-                                            <div 
-                                                className="mt-3 ml-2 border-l-2 border-white/30 pl-3 min-h-8 bg-white/10 rounded"
-                                                onDragOver={handleDragOver}
-                                                onDrop={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDrop(e, null, block.id);
-                                                }}
-                                                onTouchMove={handleTouchMove}
-                                                onTouchEnd={handleTouchEnd}
-                                                data-drop-zone="true"
-                                                data-parent-id={block.id}
-                                                style={{ touchAction: 'pan-y' }}
-                                            >
+                                            <div className="mt-3 ml-2 border-l-2 border-white/30 pl-3 min-h-6 bg-white/10 rounded">
+                                                <div className="text-xs text-white/70 italic mb-2">
+                                                    {block.children && block.children.length > 0 ? 
+                                                        `Will repeat this ${block.count} times:` : 
+                                                        `Will repeat ${block.count} times (empty):`
+                                                    }
+                                                </div>
+                                                
+                                                {/* Show the single block that will be repeated */}
                                                 {block.children && block.children.length > 0 ? (
-                                                    <div className="space-y-1">
-                                                        {block.children.map((child, childIndex) => (
-                                                            <div key={childIndex} className="flex items-center justify-between bg-white/20 rounded px-2 py-1">
-                                                                <span className="text-xs">{child.label}</span>
-                                                                <button
-                                                                    onClick={() => removeBlock(childIndex, block.id)}
-                                                                    className="bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                                                                    style={{ touchAction: 'manipulation' }}
-                                                                >
-                                                                    ×
-                                                                </button>
-                                                            </div>
-                                                        ))}
+                                                    <div className="flex items-center justify-between bg-white/20 rounded px-2 py-1">
+                                                        <span className="text-xs">{block.children[0].label}</span>
+                                                        <button
+                                                            onClick={() => removeBlock(0, block.id)}
+                                                            className="bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:scale-110 transition-transform duration-200"
+                                                            style={{ touchAction: 'manipulation' }}
+                                                            title="Remove this command"
+                                                        >
+                                                            ×
+                                                        </button>
                                                     </div>
                                                 ) : (
-                                                    <div className="text-xs text-white/70 italic py-2">
-                                                        Drop blocks here to repeat them
+                                                    <div className="text-xs text-white/50 italic py-2 text-center">
+                                                        Click a block above to add it here ⬆️
                                                     </div>
                                                 )}
                                             </div>
@@ -775,6 +673,19 @@ const CodingTab = () => {
                         ))
                     )}
                 </div>
+                
+                {/* Quick actions */}
+                {codeBlocks.length > 0 && (
+                    <div className="text-center">
+                        <button
+                            onClick={() => setCodeBlocks([])}
+                            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-3 rounded text-xs transition-colors duration-200"
+                            style={{ touchAction: 'manipulation' }}
+                        >
+                            🗑️ Clear All Code
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Run Button */}
@@ -789,10 +700,11 @@ const CodingTab = () => {
                 </button>
                 <button
                     onClick={() => setCodeBlocks([])}
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
+                    disabled={codeBlocks.length === 0}
+                    className="bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
                     style={{ touchAction: 'manipulation' }}
                 >
-                    🗑️ Clear
+                    🗑️ Clear All
                 </button>
             </div>
 

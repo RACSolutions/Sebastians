@@ -6,16 +6,21 @@ const SpaceTab = () => {
     const [quizScore, setQuizScore] = React.useState(0);
     const [currentQuizQuestion, setCurrentQuizQuestion] = React.useState(0);
     const [spaceQuizActive, setSpaceQuizActive] = React.useState(false);
+    const [highScore, setHighScore] = React.useState(() => {
+        const saved = localStorage.getItem('sebastianSpaceQuizHighScore');
+        return saved ? parseInt(saved) : 0;
+    });
     const [astronaut, setAstronaut] = React.useState({ x: 50, y: 50, visible: true });
     const [showPlanetPopup, setShowPlanetPopup] = React.useState(false);
     const [popupPlanet, setPopupPlanet] = React.useState(null);
+    const [showAstronautPopup, setShowAstronautPopup] = React.useState(false);
 
-    // Planet data with fun facts for kids
+    // Planet data with fun facts for kids - Updated with better visual representations
     const planets = [
         {
             name: 'Sun',
-            emoji: '☀️',
-            color: 'from-yellow-400 to-orange-500',
+            icon: '🌞', // Better sun representation
+            color: 'from-yellow-300 via-orange-400 to-red-500',
             size: 'w-16 h-16',
             position: { x: 50, y: 50 },
             facts: [
@@ -27,12 +32,13 @@ const SpaceTab = () => {
             ],
             funFact: 'If the Sun was the size of a basketball, Earth would be the size of a peppercorn!',
             distance: '0 km (You\'re looking at it!)',
-            type: 'Star'
+            type: 'Star',
+            glowEffect: true
         },
         {
             name: 'Mercury',
-            emoji: '☿️',
-            color: 'from-gray-400 to-gray-600',
+            icon: '🌑', // Dark, cratered appearance
+            color: 'from-gray-300 via-gray-500 to-gray-700',
             size: 'w-6 h-6',
             position: { x: 35, y: 45 },
             facts: [
@@ -48,8 +54,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Venus',
-            emoji: '♀️',
-            color: 'from-yellow-300 to-orange-400',
+            icon: '🟡', // Bright yellow/orange for thick atmosphere
+            color: 'from-yellow-200 via-orange-300 to-yellow-400',
             size: 'w-8 h-8',
             position: { x: 25, y: 60 },
             facts: [
@@ -65,8 +71,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Earth',
-            emoji: '🌍',
-            color: 'from-blue-400 to-green-400',
+            icon: '🌍', // Earth with continents visible
+            color: 'from-blue-400 via-green-400 to-blue-500',
             size: 'w-9 h-9',
             position: { x: 20, y: 35 },
             facts: [
@@ -82,8 +88,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Mars',
-            emoji: '♂️',
-            color: 'from-red-500 to-red-700',
+            icon: '🔴', // Red planet
+            color: 'from-red-400 via-red-600 to-orange-600',
             size: 'w-7 h-7',
             position: { x: 15, y: 20 },
             facts: [
@@ -99,8 +105,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Jupiter',
-            emoji: '🪐',
-            color: 'from-orange-300 to-yellow-600',
+            icon: '🟠', // Large orange/brown with bands
+            color: 'from-orange-300 via-yellow-500 to-orange-600',
             size: 'w-14 h-14',
             position: { x: 75, y: 25 },
             facts: [
@@ -112,12 +118,13 @@ const SpaceTab = () => {
             ],
             funFact: 'Jupiter is so big that all the other planets could fit inside it!',
             distance: '778 million km from Sun',
-            type: 'Gas Giant'
+            type: 'Gas Giant',
+            hasStorm: true
         },
         {
             name: 'Saturn',
-            emoji: '🪐',
-            color: 'from-yellow-200 to-orange-300',
+            icon: '🪐', // Perfect - already shows rings
+            color: 'from-yellow-200 via-amber-300 to-yellow-400',
             size: 'w-12 h-12',
             position: { x: 80, y: 65 },
             facts: [
@@ -129,12 +136,13 @@ const SpaceTab = () => {
             ],
             funFact: 'Saturn\'s rings are made of billions of pieces of ice and rock!',
             distance: '1.4 billion km from Sun',
-            type: 'Gas Giant'
+            type: 'Gas Giant',
+            hasRings: true
         },
         {
             name: 'Uranus',
-            emoji: '🌀',
-            color: 'from-blue-300 to-cyan-400',
+            icon: '🔵', // Ice blue color
+            color: 'from-cyan-300 via-blue-400 to-teal-400',
             size: 'w-10 h-10',
             position: { x: 85, y: 40 },
             facts: [
@@ -150,8 +158,8 @@ const SpaceTab = () => {
         },
         {
             name: 'Neptune',
-            emoji: '🔵',
-            color: 'from-blue-600 to-blue-800',
+            icon: '🔷', // Deep blue diamond shape for the deep blue planet
+            color: 'from-blue-600 via-blue-700 to-indigo-800',
             size: 'w-10 h-10',
             position: { x: 90, y: 55 },
             facts: [
@@ -294,6 +302,20 @@ const SpaceTab = () => {
         closePlanetPopup();
     };
 
+    // Astronaut click handler
+    const handleAstronautClick = () => {
+        setShowAstronautPopup(true);
+        
+        // Play sound if available
+        if (window.playPopSound) {
+            window.playPopSound();
+        }
+    };
+
+    const closeAstronautPopup = () => {
+        setShowAstronautPopup(false);
+    };
+
     // Solar System View
     const SolarSystemView = () => (
         <div className="space-y-4">
@@ -303,12 +325,12 @@ const SpaceTab = () => {
             </div>
 
             {/* Space Scene */}
-            <div className="relative bg-gradient-to-br from-purple-900 via-blue-900 to-black rounded-2xl p-4 overflow-hidden" style={{ height: '300px' }}>
+            <div className="relative bg-gradient-to-br from-purple-900 via-blue-900 to-black rounded-xl p-2 sm:p-4 overflow-hidden" style={{ height: '280px', minHeight: '280px' }}>
                 {/* Stars */}
                 {showStars && stars.map(star => (
                     <div
                         key={star.id}
-                        className={`absolute text-white ${star.size} animate-pulse`}
+                        className={`absolute text-white ${star.size} animate-pulse pointer-events-none`}
                         style={{
                             left: `${star.x}%`,
                             top: `${star.y}%`,
@@ -319,75 +341,159 @@ const SpaceTab = () => {
                     </div>
                 ))}
 
-                {/* Astronaut */}
+                {/* Astronaut - Better representation */}
                 <div
-                    className="absolute text-3xl transition-all duration-3000 ease-in-out cursor-pointer hover:scale-110"
+                    className="absolute text-2xl sm:text-3xl transition-all duration-3000 ease-in-out cursor-pointer hover:scale-110 z-20"
                     style={{ left: `${astronaut.x}%`, top: `${astronaut.y}%` }}
-                    onClick={() => window.speakText && window.speakText('Hello from space! I\'m exploring the solar system!')}
+                    onClick={handleAstronautClick}
                 >
-                    👨‍🚀
+                    🧑‍🚀
                 </div>
 
-                {/* Planets */}
-                {planets.map((planet) => (
-                    <div
-                        key={planet.name}
-                        className="absolute group cursor-pointer transform transition-all duration-300 hover:scale-125"
-                        style={{ left: `${planet.position.x}%`, top: `${planet.position.y}%` }}
-                        onClick={() => handlePlanetClick(planet)}
-                    >
-                        <div className={`${planet.size} bg-gradient-to-br ${planet.color} rounded-full shadow-lg border-2 border-white/30 flex items-center justify-center text-white font-bold relative overflow-hidden`}>
-                            <span className="text-lg">{planet.emoji}</span>
-                            
-                            {/* Planet name tooltip */}
-                            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                                {planet.name}
+                {/* Planets - Mobile Optimized with Better Icons */}
+                {planets.map((planet) => {
+                    // Mobile-specific positioning and sizing
+                    const mobileSize = planet.name === 'Sun' ? 'w-12 h-12 sm:w-16 sm:h-16' :
+                                     planet.name === 'Jupiter' ? 'w-10 h-10 sm:w-14 sm:h-14' :
+                                     planet.name === 'Saturn' ? 'w-9 h-9 sm:w-12 sm:h-12' :
+                                     planet.name === 'Uranus' || planet.name === 'Neptune' ? 'w-7 h-7 sm:w-10 sm:h-10' :
+                                     planet.name === 'Earth' ? 'w-7 h-7 sm:w-9 sm:h-9' :
+                                     planet.name === 'Mars' ? 'w-6 h-6 sm:w-7 sm:h-7' :
+                                     planet.name === 'Venus' ? 'w-6 h-6 sm:w-8 sm:h-8' :
+                                     'w-5 h-5 sm:w-6 sm:h-6'; // Mercury
+
+                    return (
+                        <div
+                            key={planet.name}
+                            className="absolute group cursor-pointer transform transition-all duration-300 hover:scale-110 active:scale-95 z-10"
+                            style={{ 
+                                left: `${planet.position.x}%`, 
+                                top: `${planet.position.y}%`,
+                                transform: 'translate(-50%, -50%)'
+                            }}
+                            onClick={() => handlePlanetClick(planet)}
+                        >
+                            <div className={`${mobileSize} bg-gradient-to-br ${planet.color} rounded-full shadow-lg border-2 border-white/30 flex items-center justify-center text-white font-bold relative overflow-hidden ${planet.glowEffect ? 'shadow-yellow-400/50' : ''} ${planet.hasRings ? 'ring-2 ring-yellow-300/40 ring-offset-2 ring-offset-transparent' : ''}`}>
+                                <span className="text-sm sm:text-lg">{planet.icon}</span>
+                                
+                                {/* Planet name tooltip - hidden on mobile */}
+                                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap hidden sm:block">
+                                    {planet.name}
+                                </div>
+                                
+                                {/* Mobile planet name - shows on touch */}
+                                <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white text-xs px-1 py-0.5 rounded opacity-0 group-active:opacity-100 transition-opacity duration-200 whitespace-nowrap sm:hidden">
+                                    {planet.name}
+                                </div>
+                                
+                                {/* Special effects for planets */}
+                                {planet.hasStorm && (
+                                    <div className="absolute inset-0 rounded-full bg-red-500/20 animate-pulse"></div>
+                                )}
+                                {planet.glowEffect && (
+                                    <div className="absolute inset-0 rounded-full bg-yellow-300/30 animate-pulse"></div>
+                                )}
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
-            {/* Planet Info Popup */}
-            {showPlanetPopup && popupPlanet && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-96 overflow-hidden">
+            {/* Astronaut Popup */}
+            {showAstronautPopup && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
                         {/* Popup Header */}
-                        <div className={`bg-gradient-to-r ${popupPlanet.color} text-white p-4 flex justify-between items-center`}>
-                            <div className="flex items-center space-x-3">
-                                <span className="text-3xl">{popupPlanet.emoji}</span>
+                        <div className={`bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 flex justify-between items-center`}>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-2xl">🧑‍🚀</span>
                                 <div>
-                                    <h3 className="text-xl font-bold">{popupPlanet.name}</h3>
-                                    <div className="text-sm opacity-90">{popupPlanet.type}</div>
+                                    <h3 className="text-lg font-bold">Space Explorer</h3>
+                                    <div className="text-xs opacity-90">Astronaut</div>
                                 </div>
                             </div>
                             <button
-                                onClick={closePlanetPopup}
-                                className="text-white hover:text-gray-200 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200"
+                                onClick={closeAstronautPopup}
+                                className="text-white hover:text-gray-200 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200 flex-shrink-0"
                             >
                                 ×
                             </button>
                         </div>
                         
                         {/* Popup Content */}
-                        <div className="p-4 overflow-y-auto max-h-64">
-                            <div className="mb-4">
+                        <div className="p-3">
+                            <div className="mb-3">
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-gray-800 text-sm leading-relaxed">
+                                    🚀 Hello from space! I'm exploring the solar system and learning about all the amazing planets!
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <div className="bg-yellow-50 rounded-lg p-2 text-gray-800 text-xs">
+                                    ⭐ Did you know astronauts float in space because there's no gravity?
+                                </div>
+                                <div className="bg-green-50 rounded-lg p-2 text-gray-800 text-xs">
+                                    🌍 From space, Earth looks like a beautiful blue marble!
+                                </div>
+                                <div className="bg-purple-50 rounded-lg p-2 text-gray-800 text-xs">
+                                    🌌 Space is completely silent because there's no air to carry sound!
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Popup Footer */}
+                        <div className="bg-gray-50 px-3 py-2 border-t">
+                            <button
+                                onClick={closeAstronautPopup}
+                                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg transition-colors duration-200 text-sm"
+                            >
+                                Continue Exploring! 🚀
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Planet Info Popup - Mobile Optimized */}
+            {showPlanetPopup && popupPlanet && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[85vh] overflow-hidden">
+                        {/* Popup Header */}
+                        <div className={`bg-gradient-to-r ${popupPlanet.color} text-white p-3 flex justify-between items-center`}>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-2xl">{popupPlanet.icon}</span>
+                                <div>
+                                    <h3 className="text-lg font-bold">{popupPlanet.name}</h3>
+                                    <div className="text-xs opacity-90">{popupPlanet.type}</div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={closePlanetPopup}
+                                className="text-white hover:text-gray-200 text-xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-white hover:bg-opacity-20 transition-colors duration-200 flex-shrink-0"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        {/* Popup Content */}
+                        <div className="p-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 140px)' }}>
+                            <div className="mb-3">
                                 <div className="text-sm font-semibold text-gray-700 mb-2">Fun Fact:</div>
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-gray-800 text-sm">
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-gray-800 text-sm leading-relaxed">
                                     {popupPlanet.funFact}
                                 </div>
                             </div>
                             
-                            <div className="mb-4">
-                                <div className="text-sm font-semibold text-gray-700 mb-2">Distance from Sun:</div>
+                            <div className="mb-3">
+                                <div className="text-sm font-semibold text-gray-700 mb-1">Distance from Sun:</div>
                                 <div className="text-blue-600 font-medium text-sm">{popupPlanet.distance}</div>
                             </div>
 
-                            <div className="mb-4">
+                            <div className="mb-3">
                                 <div className="text-sm font-semibold text-gray-700 mb-2">Quick Facts:</div>
-                                <div className="space-y-1">
-                                    {popupPlanet.facts.slice(0, 2).map((fact, index) => (
-                                        <div key={index} className="bg-blue-50 rounded-lg p-2 text-gray-800 text-xs">
+                                <div className="space-y-2">
+                                    {popupPlanet.facts.slice(0, 3).map((fact, index) => (
+                                        <div key={index} className="bg-blue-50 rounded-lg p-2 text-gray-800 text-xs leading-relaxed">
                                             {fact}
                                         </div>
                                     ))}
@@ -396,18 +502,18 @@ const SpaceTab = () => {
                         </div>
                         
                         {/* Popup Footer */}
-                        <div className="bg-gray-50 px-4 py-3 flex justify-between items-center border-t">
+                        <div className="bg-gray-50 px-3 py-2 flex gap-2 border-t">
                             <button
                                 onClick={closePlanetPopup}
-                                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
+                                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-lg transition-colors duration-200 text-sm"
                             >
                                 Close
                             </button>
                             <button
                                 onClick={() => goToPlanetDetail(popupPlanet)}
-                                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
+                                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded-lg transition-colors duration-200 text-sm"
                             >
-                                Learn More →
+                                Learn More
                             </button>
                         </div>
                     </div>
@@ -415,25 +521,25 @@ const SpaceTab = () => {
             )}
 
             {/* Controls */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
                 <button
                     onClick={() => setShowStars(!showStars)}
-                    className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
+                    className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg transition-colors duration-200 text-sm"
                 >
                     {showStars ? '🌟 Hide Stars' : '⭐ Show Stars'}
                 </button>
                 <button
                     onClick={startQuiz}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 sm:py-3 px-2 sm:px-4 rounded-lg transition-colors duration-200 text-sm"
                 >
                     🧠 Space Quiz
                 </button>
             </div>
 
             {/* Quick Facts */}
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200">
-                <h4 className="font-bold text-purple-800 mb-2 text-center">🌌 Did You Know?</h4>
-                <div className="text-sm text-purple-700 space-y-1">
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-3 border border-purple-200">
+                <h4 className="font-bold text-purple-800 mb-2 text-center text-sm">🌌 Did You Know?</h4>
+                <div className="text-xs text-purple-700 space-y-1">
                     <div>🚀 There are over 200 billion stars in our galaxy!</div>
                     <div>🌍 Earth is the only planet we know that has life!</div>
                     <div>🌙 Jupiter has 79 moons - that's a lot of nightlights!</div>
@@ -461,7 +567,7 @@ const SpaceTab = () => {
                 <>
                     {/* Planet Header */}
                     <div className={`bg-gradient-to-br ${selectedPlanet.color} rounded-2xl p-6 text-white text-center shadow-lg`}>
-                        <div className="text-6xl mb-3">{selectedPlanet.emoji}</div>
+                        <div className="text-6xl mb-3">{selectedPlanet.icon}</div>
                         <h2 className="text-3xl font-bold mb-2">{selectedPlanet.name}</h2>
                         <div className="bg-white bg-opacity-20 rounded-lg p-3">
                             <div className="text-lg">{selectedPlanet.funFact}</div>
@@ -495,17 +601,12 @@ const SpaceTab = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <button
-                            onClick={() => window.speakText && window.speakText(selectedPlanet.facts.join(' '))}
-                            className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
-                        >
-                            🔊 Read Facts
-                        </button>
+                    <div className="grid grid-cols-1 gap-3">
                         <button
                             onClick={() => {
                                 const randomFact = selectedPlanet.facts[Math.floor(Math.random() * selectedPlanet.facts.length)];
-                                window.speakText && window.speakText(`Here's a random fact about ${selectedPlanet.name}: ${randomFact}`);
+                                // Show popup instead of speaking
+                                alert(`Random fact about ${selectedPlanet.name}: ${randomFact}`);
                             }}
                             className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200"
                         >

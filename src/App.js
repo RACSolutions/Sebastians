@@ -364,7 +364,7 @@ function SebastianApp() {
     );
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-purple-200 p-4">
+        <div className={`flex flex-col items-center ${currentPage === 'menu' ? 'justify-center' : 'justify-start'} min-h-screen bg-purple-200 p-4`}>
             <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md md:max-w-2xl lg:max-w-4xl">
                 {currentPage === 'menu' && <MainMenu />}
                 
