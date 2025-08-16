@@ -11,6 +11,15 @@
     <link rel="stylesheet" href="src/styles/main.css">
 </head>
 <body>
+    <!-- Hidden form for Netlify Forms - MUST BE BEFORE THE REACT APP -->
+    <form name="sebastian-feedback" netlify netlify-honeypot="bot-field" hidden>
+        <input type="text" name="name" />
+        <input type="email" name="email" />
+        <input type="text" name="category" />
+        <textarea name="message"></textarea>
+        <input type="text" name="timestamp" />
+    </form>
+
     <div id="root"></div>
     
     <!-- Load audio utilities first to make functions globally available -->
@@ -261,7 +270,10 @@
     <script type="text/babel" src="src/components/FunQuiz.js"></script>
     <script type="text/babel" src="src/components/RiddlesTab.js"></script>
     <script type="text/babel" src="src/components/CodingTab.js"></script>
-    <script type="text/babel" src="src/components/SpaceTab.js"></script> 
+    <script type="text/babel" src="src/components/SpaceTab.js"></script>
+    
+    <!-- Load FeedbackTab component -->
+    <script type="text/babel" src="src/components/FeedbackTab.js"></script>
     
     <!-- Load main app last -->
     <script type="text/babel" src="src/App.js"></script>

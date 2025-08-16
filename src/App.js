@@ -19,17 +19,17 @@ function SebastianApp() {
     const [puppyPosition, setPuppyPosition] = useState({ x: 50, y: 50 });
     const [puppyMood, setPuppyMood] = useState('happy');
 
-    // App categories with their respective pages
+    // App categories with their respective pages - Added feedback
     const appCategories = {
-        all: ['buttons', 'draw', 'piano', 'story', 'memory', 'game', 'journal', 'weather', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz', 'riddles', 'coding', 'space'],
+        all: ['buttons', 'draw', 'piano', 'story', 'memory', 'game', 'journal', 'weather', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz', 'riddles', 'coding', 'space', 'feedback'],
         games: ['memory', 'game', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz'],
         creative: ['draw', 'piano', 'story', 'journal'],
-        tools: ['weather', 'buttons', 'coding'],
+        tools: ['weather', 'buttons', 'coding', 'feedback'],
         learning: ['coding', 'quiz', 'space', 'story'],
         fun: ['buttons', 'piano', 'story', 'game', 'puppy', 'snake', 'tictactoe', 'simon', 'quiz']
     };
 
-    // App information with categories, unique colors, and development status
+    // App information with categories, unique colors, and development status - Added feedback
     const appInfo = {
         buttons: { title: 'Silly Buttons', emoji: '🔊', description: 'Make me say funny things!', category: 'fun', gradient: 'from-blue-400 to-blue-600', status: 'ready' },
         draw: { title: 'Drawing', emoji: '🎨', description: 'Draw pictures with your finger!', category: 'creative', gradient: 'from-green-400 to-emerald-600', status: 'ready' },
@@ -46,7 +46,8 @@ function SebastianApp() {
         simon: { title: 'Simon Says', emoji: '🔴', description: 'Remember the color sequence!', category: 'games', gradient: 'from-rose-400 to-pink-600', status: 'development' },
         quiz: { title: 'Fun Quiz', emoji: '❓', description: 'Test your knowledge with fun questions!', category: 'games', gradient: 'from-violet-400 to-purple-600', status: 'development' },
         coding: { title: 'Learn to Code', emoji: '💻', description: 'Drag and drop blocks to code!', category: 'learning', gradient: 'from-emerald-400 to-teal-600', status: 'development' },
-        space: { title: 'Space Explorer', emoji: '🚀', description: 'Explore planets and learn about space!', category: 'tools', gradient: 'from-indigo-400 to-purple-600', status: 'development' }
+        space: { title: 'Space Explorer', emoji: '🚀', description: 'Explore planets and learn about space!', category: 'tools', gradient: 'from-indigo-400 to-purple-600', status: 'development' },
+        feedback: { title: 'Send Ideas', emoji: '💌', description: 'Share your ideas with the developer!', category: 'tools', gradient: 'from-pink-400 to-rose-600', status: 'ready' }
     };
 
     // Filter categories
@@ -501,6 +502,13 @@ function SebastianApp() {
                     <div>
                         <BackButton title="Space Explorer" />
                         <SpaceTab />
+                    </div>
+                )}
+
+                {currentPage === 'feedback' && (
+                    <div>
+                        <BackButton title="Send Ideas" />
+                        <FeedbackTab />
                     </div>
                 )}
             </div>
