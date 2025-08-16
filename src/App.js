@@ -101,12 +101,16 @@ function SebastianApp() {
             setShowDevelopmentWarning(true);
         } else {
             setCurrentPage(page);
+            // ⭐ NEW: Scroll to top when navigating to a new page
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
     const proceedToDevelopmentApp = () => {
         if (pendingPage) {
             setCurrentPage(pendingPage);
+            // ⭐ NEW: Scroll to top when proceeding to development app
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         setShowDevelopmentWarning(false);
         setPendingPage(null);
@@ -119,6 +123,8 @@ function SebastianApp() {
 
     const goBack = () => {
         setCurrentPage('menu');
+        // ⭐ NEW: Scroll to top when going back to menu
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     // Save user name to localStorage
