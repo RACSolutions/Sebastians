@@ -282,7 +282,7 @@ function SebastianApp() {
                 <div className="text-2xl mr-3">💌</div>
                 <div>
                     <p className="font-medium">Hi Sebastian!</p>
-                    <p className="text-sm">I have fixed the Learn to Code App so you can now click on the instruction ("move right") and it will work. Love, Mum x</p>
+                    <p className="text-sm">I have added a new option where you can send me a note to fix things. Love, Mum x</p>
                 </div>
             </div>
         </div>
