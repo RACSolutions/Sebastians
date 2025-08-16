@@ -94,15 +94,16 @@ function SebastianApp() {
 
     // Navigation functions
     const goToPage = (page) => {
-        // Check if app is in development
         const app = appInfo[page];
         if (app && app.status === 'development') {
             setPendingPage(page);
             setShowDevelopmentWarning(true);
         } else {
             setCurrentPage(page);
-            // ⭐ NEW: Scroll to top when navigating to a new page
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Wait for DOM to update, then scroll
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'auto' });
+            }, 0);
         }
     };
 
@@ -110,7 +111,9 @@ function SebastianApp() {
         if (pendingPage) {
             setCurrentPage(pendingPage);
             // ⭐ NEW: Scroll to top when proceeding to development app
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'auto' });
+            }, 0);
         }
         setShowDevelopmentWarning(false);
         setPendingPage(null);
@@ -124,7 +127,9 @@ function SebastianApp() {
     const goBack = () => {
         setCurrentPage('menu');
         // ⭐ NEW: Scroll to top when going back to menu
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'auto' });
+        }, 0);
     };
 
     // Save user name to localStorage
