@@ -1,4 +1,4 @@
-// FeedbackTab component for Sebastian's Silly App
+// FeedbackTab component for Sebastian's Silly App - FIXED VERSION
 const FeedbackTab = () => {
     const [message, setMessage] = React.useState('');
     const [name, setName] = React.useState(() => {
@@ -29,27 +29,19 @@ const FeedbackTab = () => {
         setError('');
 
         try {
-            // Create form data
+            // Create form data using the exact method Netlify expects
             const formData = new FormData();
+            formData.append('form-name', 'sebastian-feedback');
             formData.append('name', name);
             formData.append('email', email);
             formData.append('category', category);
             formData.append('message', message);
             formData.append('timestamp', new Date().toISOString());
-            formData.append('userAgent', navigator.userAgent);
 
-            // Submit to Netlify Forms
+            // Submit to Netlify Forms using FormData
             const response = await fetch('/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    'form-name': 'sebastian-feedback',
-                    'name': name,
-                    'email': email,
-                    'category': category,
-                    'message': message,
-                    'timestamp': new Date().toISOString()
-                })
+                body: formData
             });
 
             if (response.ok) {
@@ -67,11 +59,26 @@ const FeedbackTab = () => {
                     setSubmitted(false);
                 }, 5000);
             } else {
-                throw new Error('Failed to send message');
+                console.error('Response not OK:', response.status, response.statusText);
+                throw new Error(`Server responded with ${response.status}`);
             }
         } catch (err) {
             console.error('Feedback submission error:', err);
-            setError('Oops! Something went wrong. Please try again later. 😅');
+            
+            // Fallback: Try mailto link
+            const subject = `Message from ${name} - ${categories.find(c => c.id === category)?.label || 'Feedback'}`;
+            const body = `Hi! Here's a message from Sebastian's app:\n\nName: ${name}\nEmail: ${email}\nCategory: ${category}\n\nMessage:\n${message}\n\nSent at: ${new Date().toLocaleString()}`;
+            const mailtoLink = `mailto:your-email@example.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            // Show alternative options
+            setError(`📧 Can't send right now, but you can email directly or try again later!`);
+            
+            // Try to open mailto as backup
+            try {
+                window.open(mailtoLink, '_blank');
+            } catch (mailtoError) {
+                console.log('Mailto also failed');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -147,9 +154,6 @@ const FeedbackTab = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Hidden form for Netlify */}
-                <input type="hidden" name="form-name" value="sebastian-feedback" />
-                
                 {/* Category Selection */}
                 <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -236,8 +240,11 @@ const FeedbackTab = () => {
 
                 {/* Error Message */}
                 {error && (
-                    <div className="bg-red-100 border border-red-300 rounded-lg p-3 text-red-700 text-sm">
+                    <div className="bg-orange-100 border border-orange-300 rounded-lg p-3 text-orange-700 text-sm">
                         {error}
+                        <div className="mt-2 text-xs">
+                            💡 Tip: You can also tell a grown-up about your ideas and they can email them!
+                        </div>
                     </div>
                 )}
 
